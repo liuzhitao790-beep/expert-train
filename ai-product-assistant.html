@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AI商品优化助手</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f7fa;color:#1a1a2e;font-size:14px}
+.app{display:flex;flex-direction:column;min-height:100vh}
+
+/* ── LOGIN PAGE ── */
+.login-page{position:fixed;inset:0;z-index:9999;display:flex;align-items:stretch;background:#fff}
+.login-left{flex:1;background:linear-gradient(145deg,#ff5500 0%,#ff8c00 50%,#ffb300 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;position:relative;overflow:hidden}
+.login-left::before{content:'';position:absolute;width:400px;height:400px;border-radius:50%;background:rgba(255,255,255,.07);top:-100px;right:-100px}
+.login-left::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.05);bottom:-80px;left:-60px}
+.login-brand{color:#fff;text-align:center;position:relative;z-index:1}
+.login-brand .logo{font-size:56px;margin-bottom:20px}
+.login-brand h1{font-size:28px;font-weight:800;margin-bottom:12px;letter-spacing:1px}
+.login-brand p{font-size:15px;opacity:.85;line-height:1.7;max-width:320px}
+.login-features{margin-top:40px;display:flex;flex-direction:column;gap:14px;position:relative;z-index:1}
+.login-feature{display:flex;align-items:center;gap:12px;color:#fff;font-size:14px}
+.login-feature .fi{width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.login-right{width:480px;display:flex;align-items:center;justify-content:center;padding:40px}
+.login-box{width:100%;max-width:380px}
+.login-box h2{font-size:24px;font-weight:800;margin-bottom:6px;color:#1a1a2e}
+.login-box .sub-title{font-size:14px;color:#888;margin-bottom:32px}
+.login-tabs{display:flex;gap:0;background:#f3f4f6;border-radius:10px;padding:4px;margin-bottom:28px}
+.login-tab{flex:1;text-align:center;padding:9px;border-radius:8px;cursor:pointer;font-size:14px;color:#666;transition:all .2s;font-weight:500}
+.login-tab.active{background:#fff;color:#ff6900;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.login-panel{display:none}.login-panel.active{display:block}
+
+/* QR PANEL */
+.qr-box{text-align:center;padding:10px 0}
+.qr-wrap{width:180px;height:180px;margin:0 auto 16px;border:2px solid #e8ecf0;border-radius:16px;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;overflow:hidden;background:#fafafa}
+.qr-wrap:hover .qr-refresh{opacity:1}
+.qr-inner{display:flex;flex-direction:column;align-items:center;gap:6px}
+.qr-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;width:126px}
+.qr-cell{border-radius:2px}
+.qr-refresh{position:absolute;inset:0;background:rgba(255,255,255,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0;transition:opacity .2s}
+.qr-status{font-size:13px;color:#888;margin-bottom:8px}
+.qr-brand{font-size:12px;color:#aaa}
+.qr-scanning{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#ff6900,transparent);animation:scanLine 2s linear infinite}
+@keyframes scanLine{0%{top:0}100%{top:100%}}
+
+/* FORM INPUTS */
+.inp-wrap{position:relative;margin-bottom:16px}
+.inp-wrap .inp-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none}
+.inp-wrap input{width:100%;border:1.5px solid #e8ecf0;border-radius:10px;padding:13px 14px 13px 44px;font-size:14px;outline:none;font-family:inherit;transition:border-color .2s;background:#fafafa}
+.inp-wrap input:focus{border-color:#ff6900;background:#fff}
+.inp-wrap .inp-right{position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:13px}
+.phone-prefix{position:absolute;left:44px;top:50%;transform:translateY(-50%);font-size:14px;color:#555;font-weight:600;pointer-events:none}
+.phone-input{padding-left:78px !important}
+.inp-wrap .send-code{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#ff6900;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.inp-wrap .send-code:disabled{color:#aaa;cursor:not-allowed}
+.inp-row{display:flex;gap:10px}
+.login-agree{font-size:12px;color:#888;margin-bottom:20px;display:flex;align-items:flex-start;gap:8px;line-height:1.6}
+.login-agree input{margin-top:3px;accent-color:#ff6900;cursor:pointer}
+.login-agree a{color:#ff6900;cursor:pointer}
+.login-btn{width:100%;padding:14px;border-radius:10px;border:none;background:linear-gradient(135deg,#ff6900,#ff9500);color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .15s;letter-spacing:1px}
+.login-btn:hover{opacity:.9}
+.login-btn:disabled{opacity:.5;cursor:not-allowed}
+.login-divider{display:flex;align-items:center;gap:12px;margin:20px 0;font-size:12px;color:#bbb}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:#e8ecf0}
+.third-login{display:flex;justify-content:center;gap:20px}
+.third-btn{width:48px;height:48px;border-radius:50%;border:1.5px solid #e8ecf0;background:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:all .2s}
+.third-btn:hover{border-color:#ff6900;transform:translateY(-2px);box-shadow:0 4px 12px rgba(255,105,0,.15)}
+.login-footer{text-align:center;margin-top:24px;font-size:13px;color:#888}
+.login-footer a{color:#ff6900;cursor:pointer}
+.login-loading{display:none;text-align:center;padding:20px}
+.login-success{display:none;text-align:center;padding:20px}
+.login-success .success-icon{font-size:52px;margin-bottom:12px}
+.login-success p{font-size:15px;color:#555}
+
+/* COUNTDOWN */
+@keyframes countDown{from{stroke-dashoffset:0}to{stroke-dashoffset:125.6}}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#ff6900,#ff9500);color:#fff;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;box-shadow:0 2px 8px rgba(255,105,0,.3);position:sticky;top:0;z-index:100}
+.header-logo{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
+.header-logo .badge{background:rgba(255,255,255,.25);font-size:11px;padding:2px 8px;border-radius:10px}
+.header-right{display:flex;align-items:center;gap:16px}
+.shop-tag{background:rgba(255,255,255,.2);border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;transition:background .2s}
+.shop-tag:hover{background:rgba(255,255,255,.35)}
+.avatar{width:34px;height:34px;border-radius:50%;background:#fff;color:#ff6900;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.msg-btn{position:relative;cursor:pointer;font-size:20px;line-height:1}
+.msg-btn .dot{position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#f04;border-radius:50%;font-size:10px;color:#fff;display:flex;align-items:center;justify-content:center}
+
+/* LAYOUT */
+.body{display:flex;flex:1}
+.sidebar{width:220px;background:#fff;border-right:1px solid #edf0f5;padding:16px 0;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:background .15s;color:#555;font-size:14px}
+.nav-item:hover{background:#fff7f0;color:#ff6900}
+.nav-item.active{background:#fff3eb;color:#ff6900;font-weight:600;border-right:3px solid #ff6900}
+.nav-item .icon{font-size:18px;width:24px;text-align:center}
+.nav-badge{margin-left:auto;background:#ff6900;color:#fff;font-size:11px;padding:1px 7px;border-radius:10px}
+.nav-section{padding:14px 20px 6px;font-size:11px;color:#aaa;font-weight:600;letter-spacing:1px}
+.quota-box{padding:12px 16px;margin-top:auto;border-top:1px solid #f3f4f6}
+.quota-bar{background:#f3f4f6;border-radius:4px;height:6px;overflow:hidden;margin:4px 0}
+.quota-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff6900,#ff9500)}
+
+/* MAIN */
+.main{flex:1;padding:20px;overflow-y:auto;max-height:calc(100vh - 56px)}
+.page{display:none}.page.active{display:block}
+
+/* CARDS */
+.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px}
+.card-title{font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card-title .sub{font-size:12px;color:#999;font-weight:400;margin-left:auto;cursor:pointer}
+.card-title .sub:hover{color:#ff6900}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.metric-card{background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.metric-card .label{font-size:13px;color:#888;margin-bottom:8px}
+.metric-card .value{font-size:26px;font-weight:700;color:#1a1a2e;line-height:1.1}
+.metric-card .change{font-size:12px;margin-top:6px}
+.change.up{color:#22c55e}.change.down{color:#ef4444}
+.health-ring{width:56px;height:56px;position:relative;float:right;margin-top:-8px}
+.health-ring svg{transform:rotate(-90deg)}
+.health-ring .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#22c55e}
+
+/* ALERTS */
+.alerts{display:flex;gap:12px;margin-bottom:16px}
+.alert{flex:1;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px}
+.alert.red{background:#fef2f2;border:1px solid #fca5a5;color:#dc2626}
+.alert.orange{background:#fffbeb;border:1px solid #fcd34d;color:#b45309}
+.alert.blue{background:#eff6ff;border:1px solid #93c5fd;color:#1d4ed8}
+.alert .alert-icon{font-size:20px}
+
+/* TOOLS GRID */
+.tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.tool-card{border:1px solid #e8ecf0;border-radius:10px;padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.tool-card:hover{border-color:#ff6900;box-shadow:0 4px 16px rgba(255,105,0,.12);transform:translateY(-2px)}
+.tool-card .tool-icon{font-size:28px;margin-bottom:10px}
+.tool-card .tool-name{font-size:14px;font-weight:700;margin-bottom:4px}
+.tool-card .tool-desc{font-size:12px;color:#888;line-height:1.5}
+.tool-card .tool-stat{position:absolute;top:12px;right:12px;font-size:11px;background:#fff3eb;color:#ff6900;padding:2px 8px;border-radius:8px;font-weight:600}
+.tool-card.highlight{border-color:#ff6900;background:#fffaf7}
+
+/* BUTTONS */
+.btn{padding:9px 20px;border-radius:8px;border:none;cursor:pointer;font-size:14px;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:linear-gradient(135deg,#ff6900,#ff9500);color:#fff}
+.btn-primary:hover{opacity:.88}
+.btn-outline{background:transparent;border:1.5px solid #ff6900;color:#ff6900}
+.btn-outline:hover{background:#fff3eb}
+.btn-ghost{background:#f3f4f6;color:#555}
+.btn-ghost:hover{background:#e5e7eb}
+.btn-sm{padding:5px 14px;font-size:12px;border-radius:6px}
+.btn-danger{background:#fef2f2;color:#dc2626;border:1px solid #fca5a5}
+.btn-success{background:#f0fdf4;color:#16a34a;border:1px solid #86efac}
+
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+
+/* TITLE COMPARE */
+.title-box{border:1px solid #e8ecf0;border-radius:8px;padding:12px;margin-bottom:12px}
+.title-box label{font-size:11px;color:#aaa;font-weight:600;display:block;margin-bottom:6px}
+.title-box .text{font-size:14px;line-height:1.6}
+.title-box.new-ver{border-color:#22c55e;background:#f0fdf4}
+.highlight{color:#16a34a;font-weight:600}
+.strikeout{text-decoration:line-through;color:#ef4444}
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.kw-tag{background:#fff3eb;color:#c2410c;border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;transition:background .15s}
+.kw-tag:hover{background:#ffedd5}
+.kw-tag.selected{background:#ff6900;color:#fff}
+
+/* PREDICTION */
+.pred-list{display:flex;flex-direction:column;gap:10px}
+.pred-item{display:flex;align-items:center;gap:10px}
+.pred-label{width:90px;font-size:13px;color:#555;flex-shrink:0}
+.pred-bar-wrap{flex:1;background:#f3f4f6;border-radius:4px;height:8px;overflow:hidden}
+.pred-bar{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff6900,#ff9500)}
+.pred-val{font-size:13px;font-weight:700;color:#16a34a;width:60px;text-align:right;flex-shrink:0}
+.pred-conf{font-size:11px;color:#aaa;width:50px;flex-shrink:0}
+.gmv-callout{margin-top:12px;background:linear-gradient(135deg,#fff3eb,#fffbeb);border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.gmv-callout .gval{font-size:22px;font-weight:800;color:#ff6900}
+.gmv-callout .glab{font-size:12px;color:#888}
+
+/* AB TEST */
+.ab-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:pulse 1.5s infinite;display:inline-block}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.ab-versions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ab-version{border:1px solid #e8ecf0;border-radius:8px;padding:12px}
+.ab-version.winner{border-color:#22c55e;background:#f0fdf4}
+.ab-stat-row{display:flex;gap:12px;margin-top:12px}
+.ab-stat{flex:1;background:#f9fafb;border-radius:8px;padding:10px;text-align:center}
+.ab-stat .as-val{font-size:18px;font-weight:700}
+.ab-stat .as-lab{font-size:11px;color:#888;margin-top:2px}
+.ab-stat.green .as-val{color:#16a34a}
+.ab-stat.blue .as-val{color:#2563eb}
+.ab-stat.purple .as-val{color:#7c3aed}
+.progress-bar{height:6px;background:#f3f4f6;border-radius:4px;overflow:hidden;margin-top:10px}
+.progress-bar .fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#22c55e,#4ade80)}
+
+/* HISTORY */
+.history-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #f3f4f6}
+.history-item:last-child{border-bottom:none}
+.history-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.history-icon.green{background:#f0fdf4}.history-icon.orange{background:#fff7ed}.history-icon.blue{background:#eff6ff}.history-icon.purple{background:#faf5ff}
+.history-result{font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px}
+.history-result.good{background:#f0fdf4;color:#16a34a}
+.history-result.warn{background:#fffbeb;color:#b45309}
+
+/* MESSAGE PANEL */
+.msg-panel{position:fixed;top:56px;right:16px;width:340px;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.12);z-index:200;overflow:hidden;display:none}
+.msg-panel.open{display:block}
+.msg-panel-header{padding:14px 16px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between}
+.msg-tabs{display:flex;padding:8px 16px 0;border-bottom:1px solid #f3f4f6}
+.msg-tab{padding:6px 12px;font-size:13px;cursor:pointer;color:#888;border-bottom:2px solid transparent;margin-bottom:-1px}
+.msg-tab.active{color:#ff6900;border-bottom-color:#ff6900;font-weight:600}
+.msg-list{max-height:320px;overflow-y:auto}
+.msg-item{display:flex;gap:10px;padding:10px 16px;cursor:pointer;border-bottom:1px solid #f9fafb}
+.msg-item:hover{background:#f9fafb}
+.unread-dot{width:8px;height:8px;border-radius:50%;background:#ff6900;margin-top:4px;flex-shrink:0}
+
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;width:520px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-header{padding:18px 20px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between}
+.modal-header h3{font-size:16px;font-weight:700}
+.modal-close{font-size:20px;cursor:pointer;color:#888;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px}
+.modal-close:hover{background:#f3f4f6}
+.modal-body{flex:1;padding:16px 20px;overflow-y:auto}
+
+/* CHAT */
+.chat-bubble{max-width:80%;margin-bottom:4px}
+.chat-bubble.ai{background:#f3f4f6;border-radius:0 10px 10px 10px;padding:10px 14px;font-size:13px;line-height:1.6}
+.chat-bubble.user{background:linear-gradient(135deg,#ff6900,#ff9500);color:#fff;border-radius:10px 0 10px 10px;padding:10px 14px;font-size:13px}
+.chat-row{display:flex;margin-bottom:10px;gap:8px}
+.chat-row.user{justify-content:flex-end}
+.chat-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#ff6900,#ff9500);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.modal-input{padding:12px 16px;border-top:1px solid #f3f4f6;display:flex;gap:10px}
+.modal-input input{flex:1;border:1.5px solid #e8ecf0;border-radius:8px;padding:8px 12px;font-size:13px;outline:none;font-family:inherit}
+.modal-input input:focus{border-color:#ff6900}
+.quick-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.quick-tag{background:#fff3eb;color:#c2410c;border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer;border:1px solid #fed7aa}
+.quick-tag:hover{background:#ffedd5}
+
+/* FORMS */
+.form-group{margin-bottom:14px}
+.form-group label{font-size:13px;font-weight:600;display:block;margin-bottom:6px;color:#444}
+.form-group input,.form-group textarea,.form-group select{width:100%;border:1.5px solid #e8ecf0;border-radius:8px;padding:9px 12px;font-size:13px;outline:none;font-family:inherit;resize:vertical}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:#ff6900}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* TABLES */
+table{width:100%;border-collapse:collapse}
+th{background:#f9fafb;padding:10px 12px;text-align:left;font-size:12px;color:#666;font-weight:600;border-bottom:1px solid #f3f4f6}
+td{padding:10px 12px;font-size:13px;border-bottom:1px solid #f9fafb;vertical-align:middle}
+tr:hover td{background:#fafafa}
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600}
+.status-badge.red{background:#fef2f2;color:#dc2626}
+.status-badge.orange{background:#fffbeb;color:#b45309}
+.status-badge.green{background:#f0fdf4;color:#16a34a}
+.status-badge.blue{background:#eff6ff;color:#2563eb}
+.status-badge.gray{background:#f3f4f6;color:#555}
+
+/* PLATFORM CARDS */
+.platform-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.platform-card{border:1px solid #e8ecf0;border-radius:10px;padding:14px;cursor:pointer;transition:all .2s}
+.platform-card:hover{border-color:#ff6900;box-shadow:0 4px 12px rgba(255,105,0,.1)}
+.platform-card.selected{border-color:#ff6900;background:#fff3eb}
+.platform-card .p-icon{font-size:28px;margin-bottom:8px}
+.platform-card .p-name{font-size:14px;font-weight:700;margin-bottom:4px}
+.platform-card .p-desc{font-size:12px;color:#888}
+
+/* KEYWORD TABLE */
+.heat-bar{display:flex;align-items:center;gap:6px}
+.heat-dots{display:flex;gap:2px}
+.heat-dot{width:8px;height:8px;border-radius:2px}
+
+/* HEALTH */
+.health-item{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #e8ecf0;border-radius:8px;margin-bottom:10px}
+.health-score-ring{width:48px;height:48px;position:relative;flex-shrink:0}
+.health-score-ring svg{transform:rotate(-90deg)}
+.health-score-ring .score-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:4px}
+
+/* LOADING SPINNER */
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,105,0,.3);border-top-color:#ff6900;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1a2e;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;z-index:999;display:none;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.toast.show{display:flex;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* TABS */
+.tab-bar{display:flex;gap:0;background:#f3f4f6;border-radius:8px;padding:3px;margin-bottom:16px}
+.tab-item{flex:1;text-align:center;padding:7px;border-radius:6px;cursor:pointer;font-size:13px;color:#666;transition:all .15s}
+.tab-item.active{background:#fff;color:#ff6900;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+/* SHOP SWITCH */
+.shop-item{display:flex;align-items:center;gap:12px;padding:12px;border:1.5px solid #e8ecf0;border-radius:10px;cursor:pointer;margin-bottom:10px}
+.shop-item:hover{border-color:#ff6900;background:#fffaf7}
+.shop-item.current{border-color:#ff6900;background:#fff3eb}
+.shop-avatar{width:42px;height:42px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#f3f4f6;flex-shrink:0}
+
+/* TYPING */
+.typing-dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:#999;margin:0 2px;animation:bounce .8s infinite}
+.typing-dots span:nth-child(2){animation-delay:.15s}
+.typing-dots span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+</style>
+</head>
+<body>
+<!-- ══════════════ LOGIN PAGE ══════════════ -->
+<div class="login-page" id="loginPage">
+  <!-- LEFT BRAND PANEL -->
+  <div class="login-left">
+    <div class="login-brand">
+      <div class="logo">🤖</div>
+      <h1>AI商品优化助手</h1>
+      <p>智能驱动电商增长，一站式商品运营解决方案</p>
+    </div>
+    <div class="login-features">
+      <div class="login-feature"><div class="fi">✏️</div><span>AI标题优化，自动检测违禁词</span></div>
+      <div class="login-feature"><div class="fi">📈</div><span>效果预测模型，优化前预见结果</span></div>
+      <div class="login-feature"><div class="fi">🧪</div><span>A/B测试，数据驱动选出最优版本</span></div>
+      <div class="login-feature"><div class="fi">🌐</div><span>多平台适配，一键同步内容</span></div>
+    </div>
+  </div>
+
+  <!-- RIGHT LOGIN BOX -->
+  <div class="login-right">
+    <div class="login-box">
+      <h2>欢迎登录</h2>
+      <p class="sub-title">请选择登录方式进入控制台</p>
+
+      <div class="login-tabs">
+        <div class="login-tab active" onclick="switchLoginTab('qr',this)">📱 扫码登录</div>
+        <div class="login-tab" onclick="switchLoginTab('account',this)">🔑 账号登录</div>
+        <div class="login-tab" onclick="switchLoginTab('phone',this)">📲 手机号登录</div>
+      </div>
+
+      <!-- QR CODE TAB -->
+      <div class="login-panel active" id="tab-qr">
+        <div class="qr-box">
+          <div class="qr-wrap" id="qrWrap" onclick="refreshQr()">
+            <div class="qr-inner" id="qrInner">
+              <!-- Generated QR pattern -->
+              <div class="qr-grid" id="qrGrid"></div>
+            </div>
+            <div class="qr-scanning" id="qrScanning"></div>
+            <div class="qr-refresh" id="qrRefresh">
+              <span style="font-size:28px">🔄</span>
+              <span style="font-size:13px;color:#555;font-weight:600">点击刷新二维码</span>
+            </div>
+          </div>
+          <div class="qr-status" id="qrStatus">请使用<strong>千牛工作台</strong>或<strong>淘宝卖家</strong>APP扫码</div>
+          <div class="qr-brand" id="qrExpire">二维码有效期 <span id="qrCountdown" style="color:#ff6900;font-weight:700">60</span> 秒</div>
+          <div style="margin-top:20px;padding:12px;background:#fff3eb;border-radius:10px;font-size:12px;color:#b45309;line-height:1.7">
+            <strong>授权范围：</strong><br/>
+            ✓ 读取商品数据 &nbsp; ✓ 获取类目信息<br/>
+            ✓ 访问30天店铺数据 &nbsp; ✓ 更新标题/主图
+          </div>
+        </div>
+      </div>
+
+      <!-- ACCOUNT TAB -->
+      <div class="login-panel" id="tab-account">
+        <div class="inp-wrap">
+          <span class="inp-icon">👤</span>
+          <input type="text" id="accUser" placeholder="请输入淘宝/天猫账号" autocomplete="username"/>
+        </div>
+        <div class="inp-wrap">
+          <span class="inp-icon">🔒</span>
+          <input type="password" id="accPwd" placeholder="请输入登录密码" autocomplete="current-password"/>
+          <span class="inp-right" onclick="togglePwd('accPwd',this)" style="font-size:18px">👁</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#555;cursor:pointer">
+            <input type="checkbox" style="accent-color:#ff6900"/> 记住账号
+          </label>
+          <a style="font-size:13px;color:#ff6900;cursor:pointer" onclick="toast('请前往淘宝官网找回密码')">忘记密码？</a>
+        </div>
+        <label class="login-agree">
+          <input type="checkbox" id="agreeAcc" checked/>
+          已阅读并同意 <a>《用户服务协议》</a> 和 <a>《隐私政策》</a>
+        </label>
+        <button class="login-btn" onclick="doLogin('account')">登 录</button>
+        <div class="login-divider">或使用以下方式登录</div>
+        <div class="third-login">
+          <div class="third-btn" title="支付宝登录" onclick="doLogin('alipay')">💙</div>
+          <div class="third-btn" title="微信登录" onclick="doLogin('wechat')">💚</div>
+          <div class="third-btn" title="抖音账号" onclick="doLogin('douyin')">🖤</div>
+        </div>
+      </div>
+
+      <!-- PHONE TAB -->
+      <div class="login-panel" id="tab-phone">
+        <div class="inp-wrap">
+          <span class="inp-icon">🇨🇳</span>
+          <span class="phone-prefix">+86</span>
+          <input type="tel" id="phoneNum" class="phone-input" placeholder="请输入手机号码" maxlength="11" oninput="onPhoneInput(this)"/>
+        </div>
+        <div class="inp-wrap">
+          <span class="inp-icon">🔢</span>
+          <input type="text" id="smsCode" placeholder="请输入短信验证码" maxlength="6"/>
+          <button class="send-code" id="sendCodeBtn" onclick="sendSmsCode()">获取验证码</button>
+        </div>
+        <div style="margin-bottom:16px;padding:10px 14px;background:#f0fdf4;border-radius:8px;font-size:12px;color:#16a34a;display:none" id="smsHint">
+          ✅ 验证码已发送至 <span id="smsSentTo"></span>，请注意查收
+        </div>
+        <label class="login-agree">
+          <input type="checkbox" id="agreePhone" checked/>
+          已阅读并同意 <a>《用户服务协议》</a> 和 <a>《隐私政策》</a>
+        </label>
+        <button class="login-btn" onclick="doLogin('phone')">登 录</button>
+        <div style="text-align:center;margin-top:16px;font-size:13px;color:#888">
+          未注册手机号将自动创建账号
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div class="login-loading" id="loginLoading">
+        <div style="font-size:40px;margin-bottom:16px">⏳</div>
+        <div style="font-size:15px;color:#555;margin-bottom:8px" id="loadingText">正在验证身份...</div>
+        <div style="display:flex;justify-content:center;gap:6px;margin-top:10px">
+          <div style="width:8px;height:8px;border-radius:50%;background:#ff6900;animation:bounce .8s infinite"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:#ff6900;animation:bounce .8s .15s infinite"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:#ff6900;animation:bounce .8s .3s infinite"></div>
+        </div>
+      </div>
+
+      <!-- Success state -->
+      <div class="login-success" id="loginSuccess">
+        <div class="success-icon">✅</div>
+        <div style="font-size:18px;font-weight:700;margin-bottom:6px">登录成功！</div>
+        <p>正在跳转到工作台...</p>
+      </div>
+
+      <div class="login-footer">
+        还没有账号？<a onclick="toast('请前往千牛工作台注册账号')">立即注册</a>
+        &nbsp;·&nbsp;
+        <a onclick="toast('请联系客服：400-000-0000')">联系客服</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo">🤖 AI商品优化助手 <span class="badge">旗舰版</span></div>
+  <div class="header-right">
+    <div class="shop-tag" onclick="openShopModal()">🏪 潮流服饰旗舰店 ▾</div>
+    <div class="msg-btn" onclick="toggleMsg()">🔔<span class="dot" id="msgDot">3</span></div>
+    <div class="avatar" title="李老板">李</div>
+  </div>
+</header>
+
+<!-- MESSAGE PANEL -->
+<div class="msg-panel" id="msgPanel">
+  <div class="msg-panel-header">
+    <h4>消息中心</h4>
+    <span style="font-size:12px;color:#ff6900;cursor:pointer" onclick="markAllRead()">全部已读</span>
+  </div>
+  <div class="msg-tabs">
+    <div class="msg-tab active">全部 (3)</div>
+    <div class="msg-tab" onclick="toast('暂无优化提醒')">优化提醒</div>
+    <div class="msg-tab" onclick="toast('暂无系统通知')">系统通知</div>
+  </div>
+  <div class="msg-list">
+    <div class="msg-item" id="msg1" onclick="handleMsg(1,'标题优化')">
+      <span style="font-size:22px">⚠️</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">违禁词检测警告</div>
+        <div style="font-size:12px;color:#888;margin-top:2px">2件商品标题含违禁词"最"，需立即修改</div>
+        <div style="font-size:11px;color:#bbb;margin-top:4px">5分钟前</div>
+      </div>
+      <div class="unread-dot" id="udot1"></div>
+    </div>
+    <div class="msg-item" id="msg2" onclick="handleMsg(2,'A/B测试')">
+      <span style="font-size:22px">🧪</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">A/B测试即将到期</div>
+        <div style="font-size:12px;color:#888;margin-top:2px">"女装夏季连衣裙标题优化"今日到期，B版本领先35.4%</div>
+        <div style="font-size:11px;color:#bbb;margin-top:4px">1小时前</div>
+      </div>
+      <div class="unread-dot" id="udot2"></div>
+    </div>
+    <div class="msg-item" id="msg3" onclick="handleMsg(3,'主图诊断')">
+      <span style="font-size:22px">✅</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">批量优化完成</div>
+        <div style="font-size:12px;color:#888;margin-top:2px">23件商品主图已完成AI诊断，平均评分76分</div>
+        <div style="font-size:11px;color:#bbb;margin-top:4px">3小时前</div>
+      </div>
+      <div class="unread-dot" id="udot3"></div>
+    </div>
+  </div>
+</div>
+
+<div class="body">
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="nav-section">核心功能</div>
+  <div class="nav-item active" onclick="navTo('dashboard',this)"><span class="icon">🏠</span>工作台</div>
+  <div class="nav-item" onclick="navTo('title',this)"><span class="icon">✏️</span>标题优化<span class="nav-badge" id="titleBadge">5</span></div>
+  <div class="nav-item" onclick="navTo('copy',this)"><span class="icon">📝</span>商品文案</div>
+  <div class="nav-item" onclick="navTo('image',this)"><span class="icon">🖼️</span>主图诊断</div>
+  <div class="nav-item" onclick="navTo('predict',this)"><span class="icon">📊</span>效果预测</div>
+  <div class="nav-section">运营工具</div>
+  <div class="nav-item" onclick="navTo('keyword',this)"><span class="icon">🔑</span>关键词推荐</div>
+  <div class="nav-item" onclick="navTo('platform',this)"><span class="icon">🌐</span>多平台适配</div>
+  <div class="nav-item" onclick="navTo('abtest',this)"><span class="icon">🧪</span>A/B测试</div>
+  <div class="nav-section">数据与诊断</div>
+  <div class="nav-item" onclick="navTo('health',this)"><span class="icon">🏥</span>店铺健康<span class="nav-badge">23</span></div>
+  <div class="nav-item" onclick="navTo('kb',this)"><span class="icon">💡</span>知识库问答</div>
+  <div class="quota-box">
+    <div style="font-size:12px;color:#aaa;margin-bottom:6px">今日额度</div>
+    <div style="font-size:12px;color:#555;display:flex;justify-content:space-between">标题 <span>47/50</span></div>
+    <div class="quota-bar"><div class="quota-fill" style="width:94%"></div></div>
+    <div style="font-size:12px;color:#555;display:flex;justify-content:space-between;margin-top:6px">文案 <span>23/30</span></div>
+    <div class="quota-bar"><div class="quota-fill" style="width:77%"></div></div>
+  </div>
+</aside>
+
+<!-- MAIN AREA -->
+<main class="main">
+
+<!-- ═══════ PAGE: DASHBOARD ═══════ -->
+<div class="page active" id="page-dashboard">
+  <div class="metrics">
+    <div class="metric-card">
+      <div class="label">店铺健康分</div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="value" style="color:#22c55e">82</div>
+        <div class="health-ring">
+          <svg width="56" height="56"><circle cx="28" cy="28" r="22" fill="none" stroke="#e8ecf0" stroke-width="5"/>
+          <circle cx="28" cy="28" r="22" fill="none" stroke="#22c55e" stroke-width="5" stroke-dasharray="138.2" stroke-dashoffset="24.9" stroke-linecap="round"/></svg>
+          <div class="num">82</div>
+        </div>
+      </div>
+      <div class="change up">↑ 较上月 +3分</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">今日曝光量</div>
+      <div class="value">89.4<span style="font-size:16px">万</span></div>
+      <div class="change up">↑ 8.3%</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">今日GMV</div>
+      <div class="value">¥24,680</div>
+      <div class="change up">↑ 15.6%</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">在售商品数</div>
+      <div class="value">1,248</div>
+      <div class="change up">↑ 较上月 +12件</div>
+    </div>
+  </div>
+  <div class="alerts">
+    <div class="alert red">
+      <span class="alert-icon">🚨</span>
+      <div><strong>2件商品</strong>含违禁词，需立即处理</div>
+      <button class="btn btn-sm btn-danger" style="margin-left:auto" onclick="navToWithClick('title')">立即处理</button>
+    </div>
+    <div class="alert orange">
+      <span class="alert-icon">⚡</span>
+      <div><strong>5件商品</strong>标题待优化，预计提升转化率12%</div>
+      <button class="btn btn-sm btn-primary" style="margin-left:auto" onclick="navToWithClick('title')">一键优化</button>
+    </div>
+    <div class="alert blue">
+      <span class="alert-icon">🧪</span>
+      <div>A/B测试今日到期，<strong>B版本领先35.4%</strong></div>
+      <button class="btn btn-sm btn-outline" style="margin-left:auto;color:#1d4ed8;border-color:#1d4ed8" onclick="navToWithClick('abtest')">查看结果</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">🤖 AI功能中心</div>
+    <div class="tools-grid">
+      <div class="tool-card highlight" onclick="navToWithClick('title')">
+        <span class="tool-stat">5个待处理</span>
+        <div class="tool-icon">✏️</div>
+        <div class="tool-name">标题优化</div>
+        <div class="tool-desc">AI生成高转化率标题，自动检测违禁词</div>
+      </div>
+      <div class="tool-card" onclick="navToWithClick('copy')">
+        <div class="tool-icon">📝</div>
+        <div class="tool-name">商品文案</div>
+        <div class="tool-desc">详情页文案、主图文字、短视频脚本一键生成</div>
+      </div>
+      <div class="tool-card" onclick="navToWithClick('image')">
+        <span class="tool-stat">均分76分</span>
+        <div class="tool-icon">🖼️</div>
+        <div class="tool-name">主图诊断</div>
+        <div class="tool-desc">AI评分+改进建议，识别低点击率主图</div>
+      </div>
+      <div class="tool-card" onclick="navToWithClick('predict')">
+        <div class="tool-icon">📈</div>
+        <div class="tool-name">效果预测</div>
+        <div class="tool-desc">优化前后数据预测，曝光/点击率/转化率分析</div>
+      </div>
+      <div class="tool-card" onclick="navToWithClick('keyword')">
+        <div class="tool-icon">🔑</div>
+        <div class="tool-name">关键词推荐</div>
+        <div class="tool-desc">搜索热度+竞争度+转化率三维评估</div>
+      </div>
+      <div class="tool-card" onclick="navToWithClick('platform')">
+        <div class="tool-icon">🌐</div>
+        <div class="tool-name">多平台适配</div>
+        <div class="tool-desc">淘宝内容一键适配抖音/小红书/微信</div>
+      </div>
+      <div class="tool-card" onclick="navToWithClick('abtest')">
+        <span class="tool-stat">1个进行中</span>
+        <div class="tool-icon">🧪</div>
+        <div class="tool-name">A/B测试</div>
+        <div class="tool-desc">多版本对照测试，数据驱动选出最优版本</div>
+      </div>
+      <div class="tool-card" onclick="navToWithClick('health')">
+        <span class="tool-stat">23待优化</span>
+        <div class="tool-icon">🏥</div>
+        <div class="tool-name">店铺健康诊断</div>
+        <div class="tool-desc">全店巡检，违禁词/低分/滞销品综合报告</div>
+      </div>
+      <div class="tool-card" onclick="navToWithClick('kb')">
+        <div class="tool-icon">💡</div>
+        <div class="tool-name">AI知识库问答</div>
+        <div class="tool-desc">电商运营知识库+成功案例，智能问答</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">📋 近期操作历史 <span class="sub" onclick="navToWithClick('title')">查看全部 →</span></div>
+    <div class="history-item">
+      <div class="history-icon green">✅</div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:600">标题优化 - 女装碎花连衣裙</div><div style="font-size:12px;color:#888">违禁词已替换，字数从19增至28字</div></div>
+      <div style="font-size:12px;color:#bbb;white-space:nowrap;margin-right:10px">今天 09:23</div>
+      <span class="history-result good">+40%预测</span>
+    </div>
+    <div class="history-item">
+      <div class="history-icon orange">🖼️</div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:600">主图诊断 - 男装T恤（23件批量）</div><div style="font-size:12px;color:#888">平均76分，8件需优化</div></div>
+      <div style="font-size:12px;color:#bbb;white-space:nowrap;margin-right:10px">今天 08:15</div>
+      <span class="history-result warn">8件需改进</span>
+    </div>
+    <div class="history-item">
+      <div class="history-icon blue">🧪</div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:600">A/B测试 - 连衣裙标题优化</div><div style="font-size:12px;color:#888">B版本CTR 3.06% vs A版本 2.26%</div></div>
+      <div style="font-size:12px;color:#bbb;white-space:nowrap;margin-right:10px">昨天 15:42</div>
+      <span class="history-result good">进行中</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ PAGE: TITLE OPTIMIZATION ═══════ -->
+<div class="page" id="page-title">
+  <div class="card">
+    <div class="card-title">✏️ 标题优化工作台</div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center">
+      <input id="searchProduct" style="flex:1;border:1.5px solid #e8ecf0;border-radius:8px;padding:9px 14px;font-size:13px;outline:none" placeholder="🔍 搜索商品名称或ID..." oninput="filterProducts(this.value)" onfocus="this.style.borderColor='#ff6900'" onblur="this.style.borderColor='#e8ecf0'"/>
+      <button class="btn btn-primary" onclick="batchOptimize()">⚡ 一键批量优化 (5件)</button>
+    </div>
+    <table id="productTable">
+      <thead><tr><th><input type="checkbox" onclick="selectAll(this)"/></th><th>商品名称</th><th>当前标题字数</th><th>问题</th><th>状态</th><th>操作</th></tr></thead>
+      <tbody id="productTbody"></tbody>
+    </table>
+  </div>
+  <!-- Optimization workspace -->
+  <div id="optWorkspace" style="display:none">
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">🔧 优化工作区 - <span id="wsProdName" style="color:#ff6900"></span></div>
+        <div class="title-box">
+          <label>原标题 <span id="wsIssue" style="color:#ef4444"></span></label>
+          <div class="text" id="wsOrig"></div>
+          <div style="font-size:11px;color:#aaa;text-align:right;margin-top:4px" id="wsOrigLen"></div>
+        </div>
+        <div class="title-box new-ver">
+          <label>AI优化标题 ✨</label>
+          <div class="text" id="wsNew" contenteditable="true" style="outline:none;min-height:40px"></div>
+          <div style="font-size:11px;color:#aaa;text-align:right;margin-top:4px" id="wsNewLen"></div>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:#444;margin-bottom:8px">推荐关键词</div>
+        <div class="tag-row" id="wsKwTags"></div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="btn btn-primary" onclick="applyTitle()">✅ 一键应用</button>
+          <button class="btn btn-outline" onclick="regenTitle()">🔄 重新生成</button>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="favoriteTitle()">⭐ 收藏</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📈 效果预测</div>
+        <div class="pred-list" id="wsPredList"></div>
+        <div class="gmv-callout" style="margin-top:12px">
+          <div><div class="glab">预计月GMV增量</div><div class="gval" id="wsGmv"></div></div>
+          <div style="text-align:right"><div class="glab">ROI提升</div><div style="font-size:18px;font-weight:700;color:#7c3aed" id="wsRoi"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ PAGE: COPYWRITING ═══════ -->
+<div class="page" id="page-copy">
+  <div class="card">
+    <div class="card-title">📝 商品文案生成</div>
+    <div class="form-row" style="margin-bottom:14px">
+      <div class="form-group" style="margin-bottom:0">
+        <label>商品名称</label>
+        <input id="copyProduct" type="text" placeholder="例如：女装夏季碎花雪纺连衣裙" value="女装夏季碎花雪纺连衣裙"/>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>目标平台</label>
+        <select id="copyPlatform">
+          <option>淘宝/天猫详情页</option>
+          <option>小红书种草文</option>
+          <option>抖音短视频脚本</option>
+          <option>微信朋友圈</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>商品卖点（可多选）</label>
+      <div class="tag-row" id="sellPointTags">
+        <span class="kw-tag" onclick="toggleSellPoint(this)">显瘦</span>
+        <span class="kw-tag" onclick="toggleSellPoint(this)">仙女风</span>
+        <span class="kw-tag" onclick="toggleSellPoint(this)">透气舒适</span>
+        <span class="kw-tag" onclick="toggleSellPoint(this)">防晒</span>
+        <span class="kw-tag" onclick="toggleSellPoint(this)">百搭</span>
+        <span class="kw-tag" onclick="toggleSellPoint(this)">大码友好</span>
+        <span class="kw-tag" onclick="toggleSellPoint(this)">度假风</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" onclick="generateCopy()">🤖 AI生成文案</button>
+      <button class="btn btn-ghost" onclick="clearCopy()">清空</button>
+    </div>
+  </div>
+  <div id="copyResult" style="display:none">
+    <div class="card">
+      <div class="card-title">生成结果 <span class="sub" onclick="copyCopyText()">📋 一键复制</span></div>
+      <div class="tab-bar" id="copyTabs">
+        <div class="tab-item active" onclick="switchCopyTab(0,this)">版本一</div>
+        <div class="tab-item" onclick="switchCopyTab(1,this)">版本二</div>
+        <div class="tab-item" onclick="switchCopyTab(2,this)">版本三</div>
+      </div>
+      <div id="copyContent" style="background:#f9fafb;border-radius:8px;padding:16px;font-size:14px;line-height:1.8;white-space:pre-wrap;min-height:180px"></div>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button class="btn btn-primary" onclick="toast('✅ 文案已保存到草稿箱')">保存草稿</button>
+        <button class="btn btn-outline" onclick="generateCopy()">🔄 重新生成</button>
+        <button class="btn btn-ghost" onclick="toast('✅ 已发布到商品详情页')">一键发布</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ PAGE: IMAGE DIAGNOSIS ═══════ -->
+<div class="page" id="page-image">
+  <div class="card">
+    <div class="card-title">🖼️ 主图智能诊断</div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center">
+      <span style="font-size:13px;color:#888">选择诊断方式：</span>
+      <button class="btn btn-primary btn-sm" onclick="runDiagnosis()">🔍 全店扫描</button>
+      <button class="btn btn-outline btn-sm" onclick="toast('请选择要上传的主图文件')">📤 上传单张诊断</button>
+    </div>
+    <table>
+      <thead><tr><th>商品</th><th>当前主图</th><th>AI评分</th><th>问题诊断</th><th>优化建议</th><th>操作</th></tr></thead>
+      <tbody id="imageTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════ PAGE: PREDICT ═══════ -->
+<div class="page" id="page-predict">
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">📊 效果预测模型</div>
+      <div class="form-group">
+        <label>选择商品</label>
+        <select id="predictProduct">
+          <option>女装夏季碎花雪纺连衣裙</option>
+          <option>男装休闲短裤五分裤</option>
+          <option>夏季防晒冰丝薄款外套</option>
+          <option>高腰牛仔短裤女显腿长</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>优化类型</label>
+        <select id="predictType" onchange="updatePredictions()">
+          <option value="title">标题优化</option>
+          <option value="image">主图优化</option>
+          <option value="price">定价调整</option>
+          <option value="copy">文案优化</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>当前数据</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="background:#f9fafb;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700">2.26%</div><div style="font-size:12px;color:#888;margin-top:2px">当前CTR</div></div>
+          <div style="background:#f9fafb;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700">1.84%</div><div style="font-size:12px;color:#888;margin-top:2px">当前转化率</div></div>
+          <div style="background:#f9fafb;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700">12,450</div><div style="font-size:12px;color:#888;margin-top:2px">日均曝光</div></div>
+          <div style="background:#f9fafb;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:700">¥1,680</div><div style="font-size:12px;color:#888;margin-top:2px">日均GMV</div></div>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="runPrediction()">🚀 运行预测模型</button>
+    </div>
+    <div class="card" id="predResultCard">
+      <div class="card-title">📈 预测结果</div>
+      <div id="predResult">
+        <div style="text-align:center;padding:40px;color:#aaa">
+          <div style="font-size:40px;margin-bottom:12px">📊</div>
+          <div>选择商品和优化类型后<br/>点击"运行预测模型"查看结果</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ PAGE: KEYWORDS ═══════ -->
+<div class="page" id="page-keyword">
+  <div class="card">
+    <div class="card-title">🔑 关键词智能推荐</div>
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <input id="kwInput" style="flex:1;border:1.5px solid #e8ecf0;border-radius:8px;padding:9px 14px;font-size:13px;outline:none" placeholder="输入商品类目或核心词，例如：连衣裙" value="连衣裙" onfocus="this.style.borderColor='#ff6900'" onblur="this.style.borderColor='#e8ecf0'"/>
+      <button class="btn btn-primary" onclick="searchKeywords()">🔍 分析关键词</button>
+    </div>
+    <div class="tab-bar">
+      <div class="tab-item active" onclick="filterKw('all',this)">全部</div>
+      <div class="tab-item" onclick="filterKw('hot',this)">🔥 高热词</div>
+      <div class="tab-item" onclick="filterKw('long',this)">长尾词</div>
+      <div class="tab-item" onclick="filterKw('convert',this)">高转化词</div>
+    </div>
+    <table>
+      <thead><tr><th>关键词</th><th>搜索热度</th><th>竞争度</th><th>转化率</th><th>推荐指数</th><th>操作</th></tr></thead>
+      <tbody id="kwTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════ PAGE: PLATFORM ═══════ -->
+<div class="page" id="page-platform">
+  <div class="card">
+    <div class="card-title">🌐 多平台内容适配</div>
+    <div class="form-group">
+      <label>原始内容（淘宝/天猫）</label>
+      <textarea id="platInput" rows="4">2024夏季新款女装碎花雪纺连衣裙【精选】显瘦气质仙女风爆款海边度假裙子，采用优质雪纺面料，轻薄透气，多种碎花图案可选，修身显瘦版型，适合各种场合穿着。</textarea>
+    </div>
+    <div style="font-size:13px;font-weight:600;color:#444;margin-bottom:10px">选择目标平台</div>
+    <div class="platform-grid">
+      <div class="platform-card selected" id="plat-douyin" onclick="togglePlatform('douyin')">
+        <div class="p-icon">🎵</div>
+        <div class="p-name">抖音</div>
+        <div class="p-desc">短视频文案风格，突出娱乐性</div>
+      </div>
+      <div class="platform-card selected" id="plat-xiaohongshu" onclick="togglePlatform('xiaohongshu')">
+        <div class="p-icon">📕</div>
+        <div class="p-name">小红书</div>
+        <div class="p-desc">种草笔记风格，分享感强</div>
+      </div>
+      <div class="platform-card" id="plat-wechat" onclick="togglePlatform('wechat')">
+        <div class="p-icon">💬</div>
+        <div class="p-name">微信朋友圈</div>
+        <div class="p-desc">生活化语言，真实感强</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:16px" onclick="adaptPlatforms()">⚡ 一键适配所选平台</button>
+  </div>
+  <div id="platResults" style="display:none">
+    <div class="two-col" id="platResultCards"></div>
+  </div>
+</div>
+
+<!-- ═══════ PAGE: A/B TEST ═══════ -->
+<div class="page" id="page-abtest">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <div style="font-size:16px;font-weight:700">🧪 A/B测试管理</div>
+    <button class="btn btn-primary" onclick="openAbModal()">+ 新建测试</button>
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div style="font-size:15px;font-weight:700">女装夏季连衣裙标题优化测试</div>
+        <div style="font-size:12px;color:#888;margin-top:4px;display:flex;gap:16px">
+          <span><span class="ab-dot"></span> 进行中</span>
+          <span>⏱️ 还剩2天</span>
+          <span>🔀 各50%流量</span>
+          <span>📅 2026-02-26 开始</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-success btn-sm" onclick="applyAbWinner()">🏆 应用B版本</button>
+        <button class="btn btn-ghost btn-sm" onclick="toast('📊 详细报告已生成')">详细报告</button>
+        <button class="btn btn-danger btn-sm" onclick="stopAbTest()">终止</button>
+      </div>
+    </div>
+    <div class="ab-versions">
+      <div class="ab-version">
+        <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px">版本 A（对照组）</div>
+        <div style="font-size:12px;color:#444;line-height:1.5;margin-bottom:8px">2024夏季新款女装碎花雪纺连衣裙显瘦气质仙女风海边度假裙子</div>
+        <div style="font-size:24px;font-weight:700">2.26%</div>
+        <div style="font-size:12px;color:#888;margin-top:2px">曝光 12,450 次 · 点击 281 次</div>
+      </div>
+      <div class="ab-version winner">
+        <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px;display:flex;justify-content:space-between">版本 B（优化组）<span style="background:#22c55e;color:#fff;font-size:10px;padding:1px 6px;border-radius:6px">领先 ✓</span></div>
+        <div style="font-size:12px;color:#444;line-height:1.5;margin-bottom:8px">2024夏季新款女装碎花雪纺连衣裙【精选】显瘦气质仙女风爆款海边度假裙子</div>
+        <div style="font-size:24px;font-weight:700;color:#16a34a">3.06%</div>
+        <div style="font-size:12px;color:#888;margin-top:2px">曝光 12,380 次 · 点击 379 次</div>
+        <div style="font-size:13px;color:#16a34a;font-weight:600;margin-top:4px">↑ +35.4% (p=0.023)</div>
+      </div>
+    </div>
+    <div class="ab-stat-row">
+      <div class="ab-stat green"><div class="as-val">+35.4%</div><div class="as-lab">点击率提升</div></div>
+      <div class="ab-stat blue"><div class="as-val">24,830</div><div class="as-lab">总曝光量</div></div>
+      <div class="ab-stat purple"><div class="as-val">97.7%</div><div class="as-lab">统计置信度</div></div>
+    </div>
+    <div class="progress-bar" style="margin-top:12px"><div class="fill" style="width:71%"></div></div>
+    <div style="font-size:12px;color:#888;text-align:right;margin-top:4px">测试进度 71%（还需积累29%数据量）</div>
+  </div>
+  <div class="card" style="background:#f9fafb;border:1px dashed #e8ecf0">
+    <div style="text-align:center;padding:20px;color:#aaa">
+      <div style="font-size:32px;margin-bottom:10px">🧪</div>
+      <div style="font-size:14px;margin-bottom:14px">新建A/B测试，持续优化商品表现</div>
+      <button class="btn btn-outline" onclick="openAbModal()">+ 新建测试</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ PAGE: HEALTH ═══════ -->
+<div class="page" id="page-health">
+  <div class="metrics">
+    <div class="metric-card" style="grid-column:span 1">
+      <div class="label">综合健康分</div>
+      <div class="value" style="color:#22c55e">82</div>
+      <div class="change up">↑ 较上月 +3分</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">违禁词商品</div>
+      <div class="value" style="color:#ef4444">2</div>
+      <div class="change down">需立即处理</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">待优化商品</div>
+      <div class="value" style="color:#f59e0b">23</div>
+      <div class="change" style="color:#888">标题/主图需改进</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">滞销商品</div>
+      <div class="value" style="color:#6b7280">8</div>
+      <div class="change" style="color:#888">7天无出单</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">🔍 店铺健康详情 <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="runHealthScan()">🔄 重新扫描</button></div>
+    <div id="healthList"></div>
+  </div>
+</div>
+
+<!-- ═══════ PAGE: KNOWLEDGE BASE ═══════ -->
+<div class="page" id="page-kb">
+  <div class="card" style="height:calc(100vh - 160px);display:flex;flex-direction:column;padding:0;overflow:hidden">
+    <div style="padding:16px 20px;border-bottom:1px solid #f3f4f6">
+      <div style="font-size:15px;font-weight:700">💡 AI知识库问答</div>
+      <div style="font-size:12px;color:#888;margin-top:4px">基于10,000+电商运营案例，为您提供专业解答</div>
+    </div>
+    <div class="quick-tags" style="padding:12px 20px 0;margin-bottom:0">
+      <span class="quick-tag" onclick="kbAsk('如何提升商品点击率？')">如何提升点击率？</span>
+      <span class="quick-tag" onclick="kbAsk('违禁词有哪些需要注意？')">违禁词大全</span>
+      <span class="quick-tag" onclick="kbAsk('主图设计最佳实践是什么？')">主图设计技巧</span>
+      <span class="quick-tag" onclick="kbAsk('A/B测试如何设置才科学？')">A/B测试指南</span>
+      <span class="quick-tag" onclick="kbAsk('新品上架有哪些推广技巧？')">新品推广技巧</span>
+      <span class="quick-tag" onclick="kbAsk('如何分析竞品优化自己的商品？')">竞品分析方法</span>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px 20px" id="kbHistory">
+      <div class="chat-row">
+        <div class="chat-avatar">🤖</div>
+        <div class="chat-bubble ai">你好！我是AI运营助手，拥有10,000+电商运营知识库和成功案例。<br/>你可以问我关于商品标题优化、主图设计、文案撰写、关键词策略等任何问题～</div>
+      </div>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid #f3f4f6;display:flex;gap:10px">
+      <input type="text" id="kbPageInput" style="flex:1;border:1.5px solid #e8ecf0;border-radius:8px;padding:9px 12px;font-size:13px;outline:none;font-family:inherit" placeholder="输入你的问题..." onkeydown="if(event.key==='Enter')kbSend()"/>
+      <button class="btn btn-primary" onclick="kbSend()">发送</button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div><!-- end body -->
+</div><!-- end app -->
+
+<!-- MODALS -->
+<!-- Shop Switch -->
+<div class="modal-overlay" id="shopModal">
+  <div class="modal" style="width:420px">
+    <div class="modal-header"><h3>🏪 切换店铺</h3><span class="modal-close" onclick="closeShopModal()">✕</span></div>
+    <div class="modal-body">
+      <div class="shop-item current">
+        <div class="shop-avatar">👗</div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:700">潮流服饰旗舰店</div><div style="font-size:12px;color:#888;margin-top:2px">天猫旗舰 · 健康分82 · 1,248件在售</div></div>
+        <span style="background:#ff6900;color:#fff;font-size:11px;padding:2px 8px;border-radius:8px">当前</span>
+      </div>
+      <div class="shop-item" onclick="switchShop('鞋品专营店')">
+        <div class="shop-avatar">👟</div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:700">鞋品专营店</div><div style="font-size:12px;color:#888;margin-top:2px">淘宝 · 健康分74 · 386件在售</div></div>
+      </div>
+      <div class="shop-item" onclick="switchShop('家居生活馆')">
+        <div class="shop-avatar">🏠</div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:700">家居生活馆</div><div style="font-size:12px;color:#888;margin-top:2px">天猫普通 · 健康分89 · 721件在售</div></div>
+      </div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:14px" onclick="toast('请使用千牛授权新店铺')">+ 授权新店铺</button>
+    </div>
+  </div>
+</div>
+
+<!-- AB Test Create -->
+<div class="modal-overlay" id="abModal">
+  <div class="modal" style="width:500px">
+    <div class="modal-header"><h3>🧪 新建A/B测试</h3><span class="modal-close" onclick="closeAbModal()">✕</span></div>
+    <div class="modal-body">
+      <div class="form-group"><label>测试名称</label><input type="text" placeholder="例如：夏季连衣裙标题对比" value=""/></div>
+      <div class="form-group"><label>选择商品</label><select><option>女装夏季碎花雪纺连衣裙</option><option>男装休闲短裤</option><option>夏季防晒外套</option></select></div>
+      <div class="form-group"><label>版本A（对照组）</label><textarea rows="2">2024夏季新款女装碎花雪纺连衣裙显瘦气质仙女风海边度假裙子</textarea></div>
+      <div class="form-group"><label>版本B（优化组）</label><textarea rows="2">2024夏季新款女装碎花雪纺连衣裙【精选】显瘦气质仙女风爆款海边度假裙子</textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>测试时长</label><select><option>3天</option><option>7天</option><option>14天</option></select></div>
+        <div class="form-group"><label>流量分配</label><select><option>各50%</option><option>A70% / B30%</option><option>A30% / B70%</option></select></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" style="flex:1" onclick="createAbTest()">🚀 开始测试</button>
+        <button class="btn btn-ghost" onclick="closeAbModal()">取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
+
+<script>
+// ══ LOGIN ══
+function switchLoginTab(tab, el) {
+  document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.login-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'qr') startQrCountdown();
+}
+
+// QR Code generator (visual only)
+const QR_COLORS = ['#1a1a2e','#1a1a2e','#1a1a2e','#fff','#fff','#1a1a2e','#fff'];
+function buildQr() {
+  const grid = document.getElementById('qrGrid');
+  const pattern = [
+    1,1,1,1,1,1,1,0,1,0,1,0,1,0,1,1,1,1,1,1,1,
+    1,0,0,0,0,0,1,0,0,1,0,1,0,0,1,0,0,0,0,0,1,
+    1,0,1,1,1,0,1,0,1,0,1,0,1,0,1,0,1,1,1,0,1,
+    1,0,1,1,1,0,1,0,0,1,1,0,0,0,1,0,1,1,1,0,1,
+    1,0,1,1,1,0,1,0,1,1,0,1,1,0,1,0,1,1,1,0,1,
+    1,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0,1,
+    1,1,1,1,1,1,1,0,1,0,1,0,1,0,1,1,1,1,1,1,1,
+    0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,
+    1,0,1,1,0,1,1,1,0,1,1,0,1,1,1,0,1,0,1,1,0,
+    0,1,1,0,1,0,0,0,1,0,0,1,0,0,0,1,0,1,1,0,1,
+    1,0,0,1,1,1,1,1,0,1,1,0,1,1,1,0,1,0,0,1,1,
+    0,1,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,1,0,0,0,
+    1,1,1,1,1,0,1,1,0,1,1,0,1,1,1,0,1,1,1,1,1,
+    0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,
+    1,1,1,1,1,1,1,0,0,1,1,0,1,0,1,0,1,0,1,1,0,
+    1,0,0,0,0,0,1,0,1,0,0,1,0,1,0,1,0,1,1,0,1,
+    1,0,1,1,1,0,1,0,0,1,1,0,1,0,1,0,1,0,0,1,1,
+    1,0,1,1,1,0,1,0,1,0,0,1,0,1,0,1,0,1,0,0,0,
+    1,0,1,1,1,0,1,0,0,1,1,0,1,0,1,0,1,1,1,1,0,
+    1,0,0,0,0,0,1,0,1,0,0,1,0,1,0,1,0,0,0,0,1,
+    1,1,1,1,1,1,1,0,0,1,1,0,1,0,1,0,1,0,1,1,1,
+  ];
+  grid.innerHTML = '';
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(21,1fr);gap:1.5px;width:126px';
+  pattern.forEach(v => {
+    const d = document.createElement('div');
+    d.style.cssText = `width:100%;aspect-ratio:1;border-radius:1px;background:${v?'#1a1a2e':'#fafafa'}`;
+    grid.appendChild(d);
+  });
+}
+let qrTimer = null, qrSeconds = 60;
+function startQrCountdown() {
+  clearInterval(qrTimer);
+  qrSeconds = 60;
+  buildQr();
+  document.getElementById('qrScanning').style.display = 'block';
+  document.getElementById('qrStatus').innerHTML = '请使用<strong>千牛工作台</strong>或<strong>淘宝卖家</strong>APP扫码';
+  qrTimer = setInterval(() => {
+    qrSeconds--;
+    const el = document.getElementById('qrCountdown');
+    if (el) el.textContent = qrSeconds;
+    if (qrSeconds <= 0) {
+      clearInterval(qrTimer);
+      document.getElementById('qrRefresh').style.opacity = '1';
+      document.getElementById('qrScanning').style.display = 'none';
+      document.getElementById('qrStatus').textContent = '二维码已过期，请点击刷新';
+    }
+  }, 1000);
+}
+function refreshQr() {
+  document.getElementById('qrRefresh').style.opacity = '0';
+  startQrCountdown();
+  toast('🔄 二维码已刷新');
+}
+
+// Password toggle
+function togglePwd(id, icon) {
+  const inp = document.getElementById(id);
+  if (inp.type === 'password') { inp.type = 'text'; icon.textContent = '🙈'; }
+  else { inp.type = 'password'; icon.textContent = '👁'; }
+}
+
+// Phone input
+function onPhoneInput(inp) {
+  inp.value = inp.value.replace(/\D/g, '').slice(0, 11);
+  document.getElementById('sendCodeBtn').disabled = inp.value.length !== 11;
+}
+
+// Send SMS code
+let smsCountdown = null;
+function sendSmsCode() {
+  const phone = document.getElementById('phoneNum').value;
+  if (phone.length !== 11) { toast('⚠️ 请输入正确的手机号'); return; }
+  const btn = document.getElementById('sendCodeBtn');
+  btn.disabled = true;
+  document.getElementById('smsSentTo').textContent = phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+  document.getElementById('smsHint').style.display = 'block';
+  let count = 60;
+  btn.textContent = count + 's后重发';
+  smsCountdown = setInterval(() => {
+    count--;
+    btn.textContent = count + 's后重发';
+    if (count <= 0) {
+      clearInterval(smsCountdown);
+      btn.disabled = false;
+      btn.textContent = '重新发送';
+    }
+  }, 1000);
+  toast('📱 验证码已发送（演示：1234）');
+}
+
+// Do login
+function doLogin(type) {
+  const panels = document.querySelectorAll('.login-panel, .login-tabs, .login-box h2, .login-box .sub-title, .login-footer');
+  // validate
+  if (type === 'account') {
+    const u = document.getElementById('accUser').value.trim();
+    const p = document.getElementById('accPwd').value;
+    if (!u) { shakeInput('accUser'); toast('⚠️ 请输入账号'); return; }
+    if (!p) { shakeInput('accPwd'); toast('⚠️ 请输入密码'); return; }
+    if (!document.getElementById('agreeAcc').checked) { toast('⚠️ 请先同意用户协议'); return; }
+  } else if (type === 'phone') {
+    const ph = document.getElementById('phoneNum').value;
+    const code = document.getElementById('smsCode').value;
+    if (ph.length !== 11) { toast('⚠️ 请输入正确的手机号'); return; }
+    if (!code) { toast('⚠️ 请输入验证码'); return; }
+    if (!document.getElementById('agreePhone').checked) { toast('⚠️ 请先同意用户协议'); return; }
+  }
+  // show loading
+  document.querySelectorAll('.login-panel').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.login-tabs').forEach(p => p.style.display = 'none');
+  document.querySelector('.login-box h2').style.display = 'none';
+  document.querySelector('.login-box .sub-title').style.display = 'none';
+  document.querySelector('.login-footer').style.display = 'none';
+  document.getElementById('loginLoading').style.display = 'block';
+  const msgs = ['正在验证身份...','正在加载店铺数据...','正在同步商品信息...','即将进入工作台...'];
+  let mi = 0;
+  const msgTimer = setInterval(() => {
+    mi++;
+    if (mi < msgs.length) document.getElementById('loadingText').textContent = msgs[mi];
+  }, 600);
+  setTimeout(() => {
+    clearInterval(msgTimer);
+    document.getElementById('loginLoading').style.display = 'none';
+    document.getElementById('loginSuccess').style.display = 'block';
+    setTimeout(() => {
+      document.getElementById('loginPage').style.display = 'none';
+    }, 1200);
+  }, 2800);
+}
+
+function shakeInput(id) {
+  const inp = document.getElementById(id);
+  inp.style.animation = 'none';
+  inp.style.borderColor = '#ef4444';
+  setTimeout(() => inp.style.borderColor = '', 1500);
+}
+
+// init QR on load
+window.addEventListener('load', () => {
+  buildQr();
+  startQrCountdown();
+});
+
+// ── NAV ──
+function navTo(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (el) el.classList.add('active');
+  // init page data on first visit
+  if (page === 'title' && !window._titleInited) { initTitlePage(); window._titleInited = true; }
+  if (page === 'image' && !window._imageInited) { initImagePage(); window._imageInited = true; }
+  if (page === 'keyword' && !window._kwInited) { initKwPage(); window._kwInited = true; }
+  if (page === 'health' && !window._healthInited) { initHealthPage(); window._healthInited = true; }
+}
+function navToWithClick(page) {
+  const navItems = document.querySelectorAll('.nav-item');
+  const pageMap = {dashboard:0,title:1,copy:2,image:3,predict:4,keyword:5,platform:6,abtest:7,health:8,kb:9};
+  navTo(page, navItems[pageMap[page]]);
+  document.querySelector('.msg-panel').classList.remove('open');
+}
+
+// ── TOAST ──
+function toast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── MESSAGE ──
+function toggleMsg() {
+  document.getElementById('msgPanel').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.msg-btn') && !e.target.closest('.msg-panel'))
+    document.getElementById('msgPanel').classList.remove('open');
+});
+function markAllRead() {
+  [1,2,3].forEach(i => { const d = document.getElementById('udot'+i); if(d) d.remove(); });
+  document.getElementById('msgDot').style.display='none';
+  toast('✅ 全部消息已读');
+}
+function handleMsg(id, page) {
+  const d = document.getElementById('udot'+id); if(d) d.remove();
+  let count = document.querySelectorAll('.unread-dot').length;
+  const dot = document.getElementById('msgDot');
+  if(count===0) dot.style.display='none'; else dot.textContent=count;
+  document.getElementById('msgPanel').classList.remove('open');
+  navToWithClick(page==='标题优化'?'title':page==='A/B测试'?'abtest':'image');
+}
+
+// ── MODALS ──
+function openShopModal() { document.getElementById('shopModal').classList.add('open'); }
+function closeShopModal() { document.getElementById('shopModal').classList.remove('open'); }
+function openAbModal() { document.getElementById('abModal').classList.add('open'); }
+function closeAbModal() { document.getElementById('abModal').classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+function switchShop(name) {
+  closeShopModal();
+  document.querySelector('.shop-tag').textContent = '🏪 ' + name + ' ▾';
+  toast('✅ 已切换到：' + name);
+}
+function createAbTest() {
+  closeAbModal();
+  toast('🧪 A/B测试已创建，开始收集数据...');
+}
+
+// ── TITLE PAGE ──
+const products = [
+  {id:1,name:'女装夏季碎花连衣裙',len:19,issue:'含违禁词"最"',status:'违禁词',orig:'2024夏季新款最新女装碎花雪纺连衣裙显瘦气质仙女风海边度假裙子',newTitle:'2024夏季新款女装碎花雪纺连衣裙【精选】显瘦气质仙女风爆款海边度假裙子',kws:['碎花连衣裙','夏季显瘦','仙女风','雪纺','度假裙'],gmv:'¥22,440',roi:'+2.3x'},
+  {id:2,name:'男装休闲短裤五分裤',len:15,issue:'标题字数不足',status:'待优化',orig:'夏季男士休闲短裤五分裤宽松',newTitle:'2024夏季新款男士休闲短裤五分裤宽松透气运动百搭纯棉沙滩裤',kws:['男士短裤','休闲五分裤','宽松透气','纯棉','沙滩裤'],gmv:'¥8,320',roi:'+1.6x'},
+  {id:3,name:'夏季防晒冰丝薄款外套',len:12,issue:'缺少核心关键词',status:'待优化',orig:'防晒外套女夏薄款',newTitle:'2024夏季新款防晒外套女冰丝薄款透气UPF50+显瘦长袖防紫外线开衫',kws:['防晒外套','冰丝薄款','UPF50+','透气','防紫外线'],gmv:'¥15,680',roi:'+2.1x'},
+  {id:4,name:'高腰牛仔短裤女显腿长',len:22,issue:'含违禁词"最"',status:'违禁词',orig:'夏季最流行高腰牛仔短裤女显腿长显瘦热裤',newTitle:'2024夏季爆款高腰牛仔短裤女显腿长显瘦弹力修身热裤百搭时尚',kws:['高腰牛仔短裤','显腿长','显瘦','弹力修身','热裤'],gmv:'¥11,200',roi:'+1.8x'},
+  {id:5,name:'针织开衫女春秋外套',len:10,issue:'标题字数不足',status:'待优化',orig:'针织开衫外套女',newTitle:'2024春秋新款针织开衫女宽松慵懒风毛衣外套显瘦百搭休闲上衣',kws:['针织开衫','慵懒风','毛衣外套','显瘦百搭','春秋'],gmv:'¥9,870',roi:'+1.5x'},
+];
+let optimizedIds = new Set();
+function initTitlePage() {
+  const tbody = document.getElementById('productTbody');
+  tbody.innerHTML = products.map(p => `
+    <tr id="row${p.id}">
+      <td><input type="checkbox" class="prod-cb" value="${p.id}"/></td>
+      <td><div style="font-weight:600">${p.name}</div><div style="font-size:11px;color:#888">${p.orig.substring(0,20)}...</div></td>
+      <td><span style="font-size:16px;font-weight:700">${p.len}</span><span style="color:#888">/30字</span></td>
+      <td><span style="font-size:12px;color:${p.status==='违禁词'?'#dc2626':'#b45309'}">${p.issue}</span></td>
+      <td><span class="status-badge ${p.status==='违禁词'?'red':'orange'}" id="status${p.id}">${p.status==='违禁词'?'⚠️ '+p.status:'✏️ '+p.status}</span></td>
+      <td><button class="btn btn-primary btn-sm" onclick="openWorkspace(${p.id})">优化</button></td>
+    </tr>`).join('');
+}
+function filterProducts(v) {
+  const rows = document.querySelectorAll('#productTbody tr');
+  rows.forEach((r,i) => {
+    r.style.display = products[i].name.includes(v) ? '' : 'none';
+  });
+}
+function selectAll(cb) {
+  document.querySelectorAll('.prod-cb').forEach(c => c.checked = cb.checked);
+}
+function batchOptimize() {
+  toast('⚡ 正在批量优化5件商品标题...');
+  setTimeout(()=>{
+    products.forEach(p=>{
+      document.getElementById('status'+p.id).className='status-badge green';
+      document.getElementById('status'+p.id).textContent='✅ 已优化';
+      optimizedIds.add(p.id);
+    });
+    document.getElementById('titleBadge').style.display='none';
+    toast('✅ 5件商品标题优化完成！');
+  },1800);
+}
+function openWorkspace(id) {
+  const p = products.find(x=>x.id===id);
+  document.getElementById('optWorkspace').style.display='block';
+  document.getElementById('wsProdName').textContent = p.name;
+  document.getElementById('wsIssue').textContent = '⚠️ '+p.issue;
+  document.getElementById('wsOrig').textContent = p.orig;
+  document.getElementById('wsOrigLen').textContent = p.len+'/30字';
+  const newEl = document.getElementById('wsNew');
+  newEl.innerHTML = p.newTitle.replace('【精选】','<span class="highlight">【精选】</span>').replace('爆款','<span class="highlight">爆款</span>');
+  document.getElementById('wsNewLen').textContent = p.newTitle.length+'/30字';
+  document.getElementById('wsKwTags').innerHTML = p.kws.map(k=>`<span class="kw-tag" onclick="addKw(this,'${k}')">${k}</span>`).join('');
+  document.getElementById('wsGmv').textContent = p.gmv;
+  document.getElementById('wsRoi').textContent = p.roi;
+  const preds = [{l:'曝光量',v:'+40%',w:40,c:'78%'},{l:'点击率(CTR)',v:'+34.8%',w:35,c:'72%'},{l:'转化率',v:'+15.5%',w:15,c:'58%'},{l:'收藏加购',v:'+22.3%',w:22,c:'65%'}];
+  document.getElementById('wsPredList').innerHTML = preds.map(pd=>`
+    <div class="pred-item">
+      <div class="pred-label">${pd.l}</div>
+      <div class="pred-bar-wrap"><div class="pred-bar" style="width:${pd.w}%"></div></div>
+      <div class="pred-val">${pd.v}</div>
+      <div class="pred-conf">置信${pd.c}</div>
+    </div>`).join('');
+  document.getElementById('optWorkspace').scrollIntoView({behavior:'smooth'});
+  window._currentProd = p;
+}
+function applyTitle() {
+  const p = window._currentProd;
+  if(!p) return;
+  document.getElementById('status'+p.id).className='status-badge green';
+  document.getElementById('status'+p.id).textContent='✅ 已优化';
+  optimizedIds.add(p.id);
+  const remaining = products.length - optimizedIds.size;
+  if(remaining===0) document.getElementById('titleBadge').style.display='none';
+  else document.getElementById('titleBadge').textContent=remaining;
+  toast('✅ 标题已应用到商品，预计明日生效');
+}
+function regenTitle() {
+  const el = document.getElementById('wsNew');
+  el.textContent = '正在重新生成...';
+  setTimeout(()=>{
+    const p = window._currentProd;
+    const alternatives = [
+      '2024夏季爆款女装雪纺碎花连衣裙显瘦气质仙女海边度假裙子新款',
+      '女装夏季新款碎花雪纺连衣裙2024仙女风显瘦气质海边度假长裙爆款'
+    ];
+    el.textContent = alternatives[Math.floor(Math.random()*alternatives.length)];
+    toast('🔄 已生成新版标题');
+  },900);
+}
+function addKw(el,kw) {
+  el.classList.toggle('selected');
+  toast(el.classList.contains('selected') ? '✅ 关键词"'+kw+'"已添加到标题建议' : '已移除"'+kw+'"');
+}
+function favoriteTitle() { toast('⭐ 已收藏到"我的方案库"'); }
+
+// ── COPY PAGE ──
+const copyTexts = {
+  '淘宝/天猫详情页': [
+    `✨ 2024年度爆款 | 女装夏季碎花雪纺连衣裙
+
+【商品亮点】
+🌸 精选优质雪纺面料，轻薄透气不闷热
+💃 修身显瘦版型，多种碎花图案可选
+☀️ 适合海边度假、日常出行、聚会等多场景
+
+【尺码建议】
+S码 → 建议身高155-162cm，体重45-52kg
+M码 → 建议身高160-168cm，体重50-58kg
+L码 → 建议身高165-172cm，体重55-65kg
+
+📦 顺丰发货，48小时内出单，支持7天无理由退换`,
+    `2024夏季必入！碎花雪纺连衣裙，仙女风格显瘦气质两不误。
+
+主面料：雪纺（100%聚酯纤维）轻盈飘逸
+版型：修身A字裙，视觉拉长腿部线条
+图案：精选多款碎花，每款限量发售
+
+💬 买家秀：1000+买家好评，平均评分4.9分
+🚚 支持货到付款 · 运费险 · 7天退换`,
+    `精选仙女碎花连衣裙，夏日出行必备单品。雪纺轻薄质地，穿上立刻变仙女！适合海边度假、郊游踏青、日常通勤。收腰设计，显瘦显高，遮肉神器！`
+  ],
+  '小红书种草文': [
+    `在海边偶遇了这条仙女裙🌊
+
+真的被它惊艳到了！淡淡的碎花图案，雪纺面料超级轻薄透气，在海边风一吹，简直仙到飞起✨
+
+关键是！显瘦！显瘦！显瘦！
+重要的事说三遍，修身版型真的太友好了
+
+拍照出片率100%📸 随便一个姿势都是ins风
+
+#碎花连衣裙 #仙女穿搭 #夏日穿搭 #海边度假穿搭`,
+    `姐妹们看这条裙子😍！！！
+
+超！级！仙！
+买来穿了一个夏天，每次出门都被问在哪买的
+
+✅ 雪纺材质，超级凉快
+✅ 碎花图案，清新不土
+✅ A字版型，显腿细腿长
+✅ 价格超级友好！！
+
+强烈安利！冲就完事了！
+
+#小个子穿搭 #显瘦连衣裙 #夏日必备`,
+    `这条裙子让我在海边收割了无数回头率🌸
+
+夏天就该穿这样的裙子！碎花雪纺，风一吹超级飘逸，拍照根本不需要摆pose，随便一个动作都好看
+
+穿搭搭配建议：
+👟 白色小白鞋 → 清爽日系风
+👡 草编凉鞋 → 度假ins风
+👜 草编包 → 完美搭配！
+
+#穿搭分享 #碎花裙 #夏日look`
+  ],
+  '抖音短视频脚本': [
+    `[开场 0-3s]
+画面：阳光海边，裙子随风飘动特写
+
+文案（字幕）：「等等，这条裙子也太仙了吧！」
+
+[产品展示 3-10s]
+镜头：360度展示裙子细节
+文案：「碎花雪纺，比丝绸还轻薄」
+
+[穿搭展示 10-20s]
+镜头：模特在海边行走、转圈
+文案：「每一帧都是大片质感✨」
+
+[促销信息 20-25s]
+文案：「限时优惠！点击下方链接 👇」
+BGM推荐：轻快夏日钢琴曲`,
+    `[钩子 0-2s]
+文案：「你会在海边穿什么裙子？」
+
+[痛点共鸣 2-6s]
+「夏天想穿得好看，又不想晒太阳？这条裙子解决了我的所有困扰」
+
+[产品出镜 6-18s]
+雪纺材质：风中飘逸效果
+碎花图案：近景特写
+修身效果：侧面展示腰线
+
+[行动号召 18-25s]
+「链接在主页！夏天不穿这条裙子你会后悔的」`,
+    `[悬念开场]
+「同款裙子，为什么她穿出去被问了20次在哪买？」
+
+[揭秘过程]
+碎花图案设计感 → 区别于普通款
+雪纺面料质感 → 比快消品贵一个档次
+
+[对比反转]
+「但价格只要普通款的一半！」
+
+[紧迫感结尾]
+「库存只剩最后30件，手慢无！」`
+  ],
+  '微信朋友圈': [
+    `夏天到了！给自己买了这条碎花连衣裙🌸
+
+真的很好看，雪纺面料超凉快，出去逛街不热！朋友都问我在哪买的哈哈
+
+链接放评论区，想买的快去看看，据说快卖断货了🏃`,
+    `周末海边一日游的战衣定了！就这条仙女碎花裙 ✨
+
+轻薄透气，拍照超级出片，关键价格不贵！性价比真的高
+
+有需要的姐妹留言我发你链接～`,
+    `真的不能再省这点钱了！这条连衣裙穿上出门，回头率直线上升😂
+
+碎花雪纺，仙气飘飘那种，夏天必备！强烈安利给所有姐妹！`
+  ]
+};
+let currentCopyVer = 0;
+let generatedCopies = [];
+function toggleSellPoint(el) { el.classList.toggle('selected'); }
+function generateCopy() {
+  const platform = document.getElementById('copyPlatform').value;
+  const btn = event.target;
+  btn.innerHTML = '<span class="spinner"></span> 生成中...';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.innerHTML = '🤖 AI生成文案';
+    btn.disabled = false;
+    generatedCopies = copyTexts[platform] || copyTexts['淘宝/天猫详情页'];
+    currentCopyVer = 0;
+    document.getElementById('copyResult').style.display = 'block';
+    document.getElementById('copyContent').textContent = generatedCopies[0];
+    document.querySelectorAll('#copyTabs .tab-item').forEach((t,i) => t.classList.toggle('active', i===0));
+    document.getElementById('copyResult').scrollIntoView({behavior:'smooth'});
+    toast('✅ 3版文案已生成');
+  }, 1200);
+}
+function switchCopyTab(idx, el) {
+  currentCopyVer = idx;
+  document.getElementById('copyContent').textContent = generatedCopies[idx] || '（暂无内容）';
+  document.querySelectorAll('#copyTabs .tab-item').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+function clearCopy() {
+  document.getElementById('copyResult').style.display='none';
+  document.getElementById('copyProduct').value='';
+}
+function copyCopyText() {
+  navigator.clipboard?.writeText(document.getElementById('copyContent').textContent).then(()=>toast('📋 文案已复制到剪贴板'));
+}
+
+// ── IMAGE PAGE ──
+const imageData = [
+  {name:'女装碎花连衣裙',emoji:'👗',score:89,scoreColor:'#22c55e',issues:['主图清晰度高','构图合理'],suggest:'可适当增加场景感'},
+  {name:'男装休闲短裤',emoji:'👖',score:72,scoreColor:'#f59e0b',issues:['背景不够简洁','文字过多'],suggest:'建议更换纯色背景，减少文字'},
+  {name:'防晒冰丝外套',emoji:'🧥',score:65,scoreColor:'#f59e0b',issues:['商品占比偏小','角度单一'],suggest:'增大商品在画面中的占比至70%以上'},
+  {name:'高腰牛仔短裤',emoji:'👕',score:48,scoreColor:'#ef4444',issues:['曝光不足','色彩暗淡'],suggest:'重拍：增强打光，使用浅色背景'},
+  {name:'针织开衫',emoji:'🧶',score:81,scoreColor:'#22c55e',issues:['整体不错'],suggest:'可增加多角度展示图'},
+  {name:'夏季凉鞋',emoji:'👡',score:55,scoreColor:'#ef4444',issues:['水印遮挡商品','分辨率低'],suggest:'去除水印，上传≥800x800px高清图'},
+];
+function initImagePage() {
+  const tbody = document.getElementById('imageTbody');
+  tbody.innerHTML = imageData.map(item => `
+    <tr>
+      <td><div style="font-weight:600">${item.name}</div></td>
+      <td><div style="font-size:32px;text-align:center">${item.emoji}</div></td>
+      <td>
+        <div style="font-size:20px;font-weight:700;color:${item.scoreColor}">${item.score}</div>
+        <div style="font-size:11px;color:#888">/ 100分</div>
+      </td>
+      <td><div style="font-size:12px;color:#555">${item.issues.join('，')}</div></td>
+      <td><div style="font-size:12px;color:#888">${item.suggest}</div></td>
+      <td>
+        <button class="btn btn-sm btn-primary" onclick="optimizeImage('${item.name}')">优化建议</button>
+        <button class="btn btn-sm btn-ghost" style="margin-top:4px" onclick="toast('请重新上传商品图片')">重新上传</button>
+      </td>
+    </tr>`).join('');
+}
+function runDiagnosis() {
+  toast('🔍 正在扫描全店商品主图...');
+  setTimeout(()=>toast('✅ 扫描完成，6件商品已诊断'), 2000);
+}
+function optimizeImage(name) { toast('📊 "'+name+'"的详细优化报告已生成，请查收'); }
+
+// ── PREDICT PAGE ──
+const predData = {
+  title: {imp:'+40%',ctr:'+34.8%',conv:'+15.5%',gmv:'¥22,440',conf:[78,72,58,65]},
+  image: {imp:'+28%',ctr:'+45.2%',conv:'+12.3%',gmv:'¥18,200',conf:[82,76,62,70]},
+  price: {imp:'+5%',ctr:'+8.1%',conv:'+22.6%',gmv:'¥31,680',conf:[90,85,75,80]},
+  copy: {imp:'+15%',ctr:'+18.4%',conv:'+9.8%',gmv:'¥12,900',conf:[68,64,55,60]},
+};
+function runPrediction() {
+  const type = document.getElementById('predictType').value;
+  const btn = event.target;
+  btn.innerHTML='<span class="spinner"></span> 分析中...';
+  btn.disabled=true;
+  setTimeout(()=>{
+    btn.innerHTML='🚀 运行预测模型';
+    btn.disabled=false;
+    const d = predData[type];
+    const labels=['曝光量','点击率(CTR)','转化率','收藏加购'];
+    const vals=[d.imp,d.ctr,d.conv,d.imp.replace(/[+\d.]/g,'')+''+parseInt(d.imp)*0.5+'%'];
+    const widths=[parseInt(d.imp),parseInt(d.ctr),parseInt(d.conv),parseInt(d.imp)*0.6];
+    document.getElementById('predResult').innerHTML=`
+      <div class="pred-list" style="margin-bottom:16px">
+        ${labels.map((l,i)=>`
+          <div class="pred-item">
+            <div class="pred-label">${l}</div>
+            <div class="pred-bar-wrap"><div class="pred-bar" style="width:${Math.abs(widths[i])}%"></div></div>
+            <div class="pred-val">${[d.imp,d.ctr,d.conv,'+18.5%'][i]}</div>
+            <div class="pred-conf">置信${d.conf[i]}%</div>
+          </div>`).join('')}
+      </div>
+      <div class="gmv-callout">
+        <div><div class="glab">预计月GMV增量</div><div class="gval">${d.gmv}</div></div>
+        <div style="text-align:right"><div class="glab">预测置信度</div><div style="font-size:18px;font-weight:700;color:#7c3aed">${d.conf[0]}%</div></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="toast('✅ 优化方案已加入执行队列')">🚀 立即执行优化</button>`;
+    document.getElementById('predResultCard').scrollIntoView({behavior:'smooth'});
+    toast('✅ 预测模型运行完成');
+  }, 1400);
+}
+
+// ── KEYWORD PAGE ──
+const keywords = [
+  {kw:'碎花连衣裙',heat:98,comp:'高',conv:'3.2%',score:92,type:'hot'},
+  {kw:'2024夏季连衣裙',heat:87,comp:'中',conv:'2.8%',score:88,type:'hot'},
+  {kw:'显瘦仙女裙',heat:76,comp:'中',conv:'4.1%',score:91,type:'convert'},
+  {kw:'雪纺连衣裙碎花',heat:65,comp:'低',conv:'3.6%',score:85,type:'long'},
+  {kw:'海边度假连衣裙',heat:58,comp:'低',conv:'5.2%',score:89,type:'convert'},
+  {kw:'气质碎花长裙',heat:44,comp:'低',conv:'4.8%',score:83,type:'long'},
+  {kw:'仙女风雪纺裙',heat:52,comp:'中',conv:'3.9%',score:80,type:'long'},
+  {kw:'夏季显瘦长裙',heat:71,comp:'中',conv:'2.4%',score:75,type:'hot'},
+];
+let kwFilter='all';
+function initKwPage() { renderKw(); }
+function searchKeywords() {
+  toast('🔍 正在分析关键词数据...');
+  setTimeout(()=>{ renderKw(); toast('✅ 关键词分析完成'); }, 1000);
+}
+function filterKw(type, el) {
+  kwFilter=type;
+  document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderKw();
+}
+function renderKw() {
+  const list = kwFilter==='all' ? keywords : keywords.filter(k=>k.type===kwFilter);
+  document.getElementById('kwTbody').innerHTML = list.map(k=>`
+    <tr>
+      <td><strong>${k.kw}</strong></td>
+      <td>
+        <div class="heat-bar">
+          <div class="heat-dots">${[1,2,3,4,5].map(i=>`<div class="heat-dot" style="background:${k.heat>=i*20?'#ff6900':'#e8ecf0'}"></div>`).join('')}</div>
+          <span style="font-size:12px;color:#888">${k.heat}</span>
+        </div>
+      </td>
+      <td><span class="status-badge ${k.comp==='高'?'red':k.comp==='中'?'orange':'green'}">${k.comp}</span></td>
+      <td><span style="color:#16a34a;font-weight:700">${k.conv}</span></td>
+      <td><div style="background:linear-gradient(90deg,#ff6900,#ff9500);height:6px;border-radius:3px;width:${k.score}%"></div><div style="font-size:11px;color:#888;margin-top:2px">${k.score}分</div></td>
+      <td>
+        <button class="btn btn-sm btn-primary" onclick="toast('✅ 关键词"${k.kw}"已加入标题建议')">+ 加入标题</button>
+        <button class="btn btn-sm btn-ghost" style="margin-top:4px" onclick="toast('📌 已关注"${k.kw}"的数据变化')">关注</button>
+      </td>
+    </tr>`).join('');
+}
+
+// ── PLATFORM PAGE ──
+const selectedPlatforms = new Set(['douyin','xiaohongshu']);
+function togglePlatform(p) {
+  const card = document.getElementById('plat-'+p);
+  if(selectedPlatforms.has(p)){selectedPlatforms.delete(p);card.classList.remove('selected');}
+  else{selectedPlatforms.add(p);card.classList.add('selected');}
+}
+const platContent = {
+  douyin:{icon:'🎵',name:'抖音',text:`我的天！这条裙子也太绝了吧🔥
+
+碎花雪纺，风一吹就是大片！
+
+海边穿它根本不需要摆pose，随便一个动作就出片✨
+
+姐妹们！夏天没有理由不买！！
+
+快去主页链接冲冲冲🛒 库存有限！
+
+#碎花裙 #夏日穿搭 #仙女必备`},
+  xiaohongshu:{icon:'📕',name:'小红书',text:`真的被这条裙子惊艳到了🌸
+
+作为一个每年夏天都在找"那条完美的裙子"的人
+今年终于找到了！！
+
+📍 哪里好看：
+- 碎花图案清新不土气，有点复古文艺风
+- 雪纺面料真的超轻薄，穿上像没穿一样凉快
+- 修身A字版型，显腰显腿长
+
+强烈推荐给和我一样怕热的姐妹🤍
+
+#连衣裙 #小个子穿搭 #夏天必备单品 #仙女风格 #碎花裙`},
+  wechat:{icon:'💬',name:'微信朋友圈',text:`终于找到了这个夏天最想穿的裙子🌸
+
+碎花雪纺，清爽好看，朋友圈收割点赞必备😂
+昨天穿出去，三个姐妹问我在哪买的
+
+价格也很良心，不到正价品牌一半的价格！
+有需要的留言我，发你链接👇`}
+};
+function adaptPlatforms() {
+  if(selectedPlatforms.size===0){toast('⚠️ 请至少选择一个目标平台');return;}
+  toast('⚡ 正在适配'+selectedPlatforms.size+'个平台...');
+  setTimeout(()=>{
+    const container = document.getElementById('platResultCards');
+    const results = [...selectedPlatforms];
+    container.innerHTML = results.map(p=>`
+      <div class="card" style="margin-bottom:0">
+        <div class="card-title">${platContent[p].icon} ${platContent[p].name}版本</div>
+        <div style="background:#f9fafb;border-radius:8px;padding:14px;font-size:13px;line-height:1.8;white-space:pre-wrap;min-height:160px">${platContent[p].text}</div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-sm btn-primary" onclick="toast('✅ 已复制${platContent[p].name}版本内容')">📋 复制</button>
+          <button class="btn btn-sm btn-ghost" onclick="toast('✅ 已保存草稿')">保存草稿</button>
+        </div>
+      </div>`).join('');
+    document.getElementById('platResults').style.display='block';
+    document.getElementById('platResults').scrollIntoView({behavior:'smooth'});
+    toast('✅ 适配完成！');
+  }, 1200);
+}
+
+// ── AB TEST PAGE ──
+function applyAbWinner() {
+  if(confirm('确认将版本B应用到商品标题？此操作将立即生效。')){
+    toast('✅ 版本B已应用，旧标题已归档');
+    document.querySelector('.ab-dot').style.background='#94a3b8';
+    document.querySelector('.ab-dot').style.animation='none';
+  }
+}
+function stopAbTest() {
+  if(confirm('确认终止当前A/B测试？数据将保留。')){
+    toast('⚠️ A/B测试已终止，数据已保存');
+  }
+}
+
+// ── HEALTH PAGE ──
+const healthItems = [
+  {name:'女装碎花连衣裙',score:91,color:'#22c55e',issues:[]},
+  {name:'高腰牛仔短裤',score:43,color:'#ef4444',issues:['标题含违禁词"最"','主图清晰度不足60分']},
+  {name:'男装休闲短裤',score:68,color:'#f59e0b',issues:['标题字数不足（15字）','缺少核心关键词']},
+  {name:'防晒冰丝外套',score:74,color:'#f59e0b',issues:['主图角度单一','详情页缺少尺码对照表']},
+  {name:'针织开衫',score:82,color:'#22c55e',issues:[]},
+  {name:'夏季凉鞋',score:38,color:'#ef4444',issues:['标题含违禁词"最"','主图有水印','30天零销量']},
+];
+function initHealthPage() {
+  document.getElementById('healthList').innerHTML = healthItems.map(item=>`
+    <div class="health-item">
+      <div class="health-score-ring">
+        <svg width="48" height="48" style="transform:rotate(-90deg)">
+          <circle cx="24" cy="24" r="18" fill="none" stroke="#e8ecf0" stroke-width="4"/>
+          <circle cx="24" cy="24" r="18" fill="none" stroke="${item.color}" stroke-width="4"
+            stroke-dasharray="113.1" stroke-dashoffset="${113.1*(1-item.score/100)}" stroke-linecap="round"/>
+        </svg>
+        <div class="score-num" style="color:${item.color}">${item.score}</div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700">${item.name}</div>
+        <div style="font-size:12px;color:#888;margin-top:3px">
+          ${item.issues.length===0?'<span style="color:#16a34a">✅ 无异常</span>':item.issues.map(i=>`<span style="color:#ef4444">⚠️ ${i}</span>`).join('  ')}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        ${item.score<80?`<button class="btn btn-sm btn-primary" onclick="toast('正在优化${item.name}...')">一键修复</button>`:''}
+        <button class="btn btn-sm btn-ghost" onclick="toast('${item.name}详情报告已生成')">详情</button>
+      </div>
+    </div>`).join('');
+}
+function runHealthScan() {
+  toast('🔍 正在扫描全店商品...');
+  setTimeout(()=>toast('✅ 扫描完成，6件商品已更新'), 2000);
+}
+
+// ── KNOWLEDGE BASE ──
+const kbAnswers = {
+  '如何提升商品点击率？':'提升点击率核心策略：\n\n1️⃣ 主图优化：高对比度背景，突出商品卖点，添加促销标签\n2️⃣ 标题优化：前7字放核心词，避免堆砌，自然流畅\n3️⃣ 价格策略：比竞品低5-10%效果显著\n4️⃣ 评价积累：积极引导买家评价，好评率>98%\n\n📊 通常综合优化后可提升CTR 20-40%',
+  '违禁词有哪些需要注意？':'常见违禁词类别：\n\n🚫 极限词："最"、"第一"、"顶级"、"首选"、"极品"、"最佳"\n🚫 虚假承诺："100%"、"永久"、"终身"\n🚫 敏感词："国家级"、"军队认证"、"政府指定"\n🚫 医疗宣称：夸大功效的描述\n\n✅ 建议替换：\n最 → 精选/热销/爆款\n第一 → 领先/优质/推荐\n顶级 → 高品质/精工制作',
+  '主图设计最佳实践是什么？':'主图设计黄金法则：\n\n✅ 背景：纯白/浅灰为主，提升专业感\n✅ 商品占比：60-70%，主体突出\n✅ 场景感：加入使用场景提升代入感\n✅ 卖点文字：≤5个字，字体清晰\n✅ 多角度：正/侧/细节图各一张\n\n❌ 避免：\n- 添加水印（影响专业感）\n- 大量促销文字\n- 低分辨率图片（需≥800x800px）',
+  'A/B测试如何设置才科学？':'A/B测试科学指南：\n\n📋 基础原则：\n1. 单变量原则：每次只测一个元素\n2. 流量要求：各≥1000次曝光\n3. 时长：至少3-7天（覆盖完整购物周期）\n\n📊 统计标准：\n- p值 < 0.05 为显著差异\n- 置信度 > 95% 才能下结论\n\n⚠️ 常见错误：\n- 过早结束测试\n- 同时测试多个变量\n- 忽略节假日/活动影响',
+  '新品上架有哪些推广技巧？':'新品冷启动策略：\n\n🚀 第一周：\n- 定价比预期售价低15%引流\n- 开启直通车小额测款\n- 联系老客户体验\n\n📈 第二周：\n- 优化转化率低的SKU\n- 投放人群定向广告\n- 发布买家秀/视频\n\n💡 关键指标：\n前30天如果CTR>2.5%，转化率>1.5%，则加大推广预算',
+  '如何分析竞品优化自己的商品？':'竞品分析框架：\n\n🔍 分析维度：\n1. 标题：核心词、字数、特色卖点\n2. 主图：风格、场景、信息密度\n3. 价格：定价策略、活动机制\n4. 评价：差评词云、改进方向\n\n🛠️ 工具推荐：\n- 生意参谋：行业数据\n- 数据银行：人群画像\n- 直通车：关键词竞争分析\n\n💡 核心原则：学习竞品优点，放大自身差异化优势',
+};
+function kbAsk(q) {
+  document.getElementById('kbPageInput').value = q;
+  kbSend();
+}
+function kbSend() {
+  const input = document.getElementById('kbPageInput');
+  const q = input.value.trim();
+  if(!q) return;
+  const history = document.getElementById('kbHistory');
+  history.innerHTML += `<div class="chat-row user"><div class="chat-bubble user">${q}</div></div>`;
+  history.innerHTML += `<div class="chat-row" id="typingRow"><div class="chat-avatar">🤖</div><div class="chat-bubble ai"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>`;
+  input.value='';
+  history.scrollTop = history.scrollHeight;
+  const answer = kbAnswers[q] || '这是个很好的问题！根据我的知识库，建议您从以下角度思考：\n\n1. 分析当前数据，找到核心问题\n2. 参考同类目TOP商家的做法\n3. 小范围测试，数据验证后再推广\n\n如果您需要更具体的建议，可以告诉我您的商品类目和当前遇到的具体问题，我来为您提供针对性方案！';
+  setTimeout(()=>{
+    const typingRow = document.getElementById('typingRow');
+    if(typingRow) typingRow.outerHTML=`<div class="chat-row"><div class="chat-avatar">🤖</div><div class="chat-bubble ai">${answer.replace(/\n/g,'<br>')}</div></div>`;
+    history.scrollTop = history.scrollHeight;
+  }, 1200);
+}
+
+// init title page on load since it's a common entry
+initTitlePage();
+</script>
+</body>
+</html>
