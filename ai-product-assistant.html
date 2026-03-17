@@ -453,6 +453,7 @@ tr:hover td{background:#fafafa}
   <div class="header-right">
     <div class="shop-tag" onclick="openShopModal()">🏪 潮流服饰旗舰店 ▾</div>
     <div class="msg-btn" onclick="toggleMsg()">🔔<span class="dot" id="msgDot">3</span></div>
+    <div class="shop-tag" onclick="openSettingsModal()" style="display:flex;align-items:center;gap:5px">⚙️ API设置</div>
     <div class="avatar" title="李老板">李</div>
   </div>
 </header>
@@ -554,19 +555,19 @@ tr:hover td{background:#fafafa}
     </div>
     <div class="metric-card">
       <div class="label">在售商品数</div>
-      <div class="value">1,248</div>
+      <div class="value" id="metricProductCount">1,248</div>
       <div class="change up">↑ 较上月 +12件</div>
     </div>
   </div>
   <div class="alerts">
     <div class="alert red">
       <span class="alert-icon">🚨</span>
-      <div><strong>2件商品</strong>含违禁词，需立即处理</div>
+      <div><strong id="dashAlertViolation">2件商品</strong>含违禁词，需立即处理</div>
       <button class="btn btn-sm btn-danger" style="margin-left:auto" onclick="navToWithClick('title')">立即处理</button>
     </div>
     <div class="alert orange">
       <span class="alert-icon">⚡</span>
-      <div><strong>5件商品</strong>标题待优化，预计提升转化率12%</div>
+      <div><strong id="dashAlertPending">5件商品</strong>标题待优化，预计提升转化率12%</div>
       <button class="btn btn-sm btn-primary" style="margin-left:auto" onclick="navToWithClick('title')">一键优化</button>
     </div>
     <div class="alert blue">
@@ -579,7 +580,7 @@ tr:hover td{background:#fafafa}
     <div class="card-title">🤖 AI功能中心</div>
     <div class="tools-grid">
       <div class="tool-card highlight" onclick="navToWithClick('title')">
-        <span class="tool-stat">5个待处理</span>
+        <span class="tool-stat" id="toolCardPending">5个待处理</span>
         <div class="tool-icon">✏️</div>
         <div class="tool-name">标题优化</div>
         <div class="tool-desc">AI生成高转化率标题，自动检测违禁词</div>
@@ -658,7 +659,8 @@ tr:hover td{background:#fafafa}
     <div class="card-title">✏️ 标题优化工作台</div>
     <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center">
       <input id="searchProduct" style="flex:1;border:1.5px solid #e8ecf0;border-radius:8px;padding:9px 14px;font-size:13px;outline:none" placeholder="🔍 搜索商品名称或ID..." oninput="filterProducts(this.value)" onfocus="this.style.borderColor='#ff6900'" onblur="this.style.borderColor='#e8ecf0'"/>
-      <button class="btn btn-primary" onclick="batchOptimize()">⚡ 一键批量优化 (5件)</button>
+      <button class="btn btn-outline" onclick="openProductModal()">➕ 添加商品</button>
+      <button class="btn btn-primary" id="batchOptBtn" onclick="batchOptimize()">⚡ 一键批量优化</button>
     </div>
     <table id="productTable">
       <thead><tr><th><input type="checkbox" onclick="selectAll(this)"/></th><th>商品名称</th><th>当前标题字数</th><th>问题</th><th>状态</th><th>操作</th></tr></thead>
@@ -935,12 +937,12 @@ tr:hover td{background:#fafafa}
     </div>
     <div class="metric-card">
       <div class="label">违禁词商品</div>
-      <div class="value" style="color:#ef4444">2</div>
+      <div class="value" style="color:#ef4444" id="healthMetricViolation">2</div>
       <div class="change down">需立即处理</div>
     </div>
     <div class="metric-card">
       <div class="label">待优化商品</div>
-      <div class="value" style="color:#f59e0b">23</div>
+      <div class="value" style="color:#f59e0b" id="healthMetricPending">23</div>
       <div class="change" style="color:#888">标题/主图需改进</div>
     </div>
     <div class="metric-card">
@@ -1027,6 +1029,71 @@ tr:hover td{background:#fafafa}
       <div style="display:flex;gap:10px">
         <button class="btn btn-primary" style="flex:1" onclick="createAbTest()">🚀 开始测试</button>
         <button class="btn btn-ghost" onclick="closeAbModal()">取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal" style="width:480px">
+    <div class="modal-header">
+      <h3>⚙️ 通义千问 API 设置</h3>
+      <span class="modal-close" onclick="closeSettingsModal()">✕</span>
+    </div>
+    <div class="modal-body">
+      <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#1d4ed8;line-height:1.7">
+        <strong>📌 获取 API Key：</strong><br/>
+        1. 前往 <a href="https://dashscope.aliyun.com" target="_blank" style="color:#1d4ed8;text-decoration:underline">阿里云百炼平台</a> 注册并登录<br/>
+        2. 开通「通义千问」大模型服务（含免费额度）<br/>
+        3. 在「API-KEY管理」页面创建密钥，粘贴到下方
+      </div>
+      <div class="form-group">
+        <label>API Key</label>
+        <div style="position:relative">
+          <input type="password" id="apiKeyInput" placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx" style="width:100%;border:1.5px solid #e8ecf0;border-radius:8px;padding:9px 44px 9px 12px;font-size:13px;outline:none;font-family:monospace" onfocus="this.style.borderColor='#ff6900'" onblur="this.style.borderColor='#e8ecf0'"/>
+          <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;line-height:1" onclick="toggleApiKeyVis()">👁</span>
+        </div>
+        <div style="font-size:12px;color:#aaa;margin-top:5px">🔒 仅保存在本地浏览器，不会上传至任何服务器</div>
+      </div>
+      <div class="form-group">
+        <label>模型选择</label>
+        <select id="modelSelect" style="width:100%;border:1.5px solid #e8ecf0;border-radius:8px;padding:9px 12px;font-size:13px;outline:none" onfocus="this.style.borderColor='#ff6900'" onblur="this.style.borderColor='#e8ecf0'">
+          <option value="qwen-plus">qwen-plus（推荐 · 速度与质量均衡）</option>
+          <option value="qwen-turbo">qwen-turbo（快速 · 适合简单任务）</option>
+          <option value="qwen-max">qwen-max（最强 · 响应较慢）</option>
+          <option value="qwen-long">qwen-long（超长文本处理）</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" style="flex:1" onclick="saveSettings()">💾 保存</button>
+        <button class="btn btn-outline" onclick="testApiConnection()">🔧 测试连接</button>
+        <button class="btn btn-ghost" onclick="closeSettingsModal()">取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PRODUCT MODAL -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal" style="width:480px">
+    <div class="modal-header">
+      <h3>➕ 添加商品</h3>
+      <span class="modal-close" onclick="closeProductModal()">✕</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>商品名称 <span style="color:#ef4444">*</span></label>
+        <input id="prodModalName" type="text" placeholder="例如：女装夏季碎花连衣裙"/>
+      </div>
+      <div class="form-group">
+        <label>原始标题 <span style="color:#ef4444">*</span></label>
+        <textarea id="prodModalOrig" rows="3" placeholder="请输入商品原始标题..." oninput="onProdOrigInput(this.value)"></textarea>
+      </div>
+      <div id="prodModalDetect" style="display:none;margin-bottom:12px;padding:10px;border-radius:8px;font-size:13px"></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" style="flex:1" onclick="saveProductModal()">保存</button>
+        <button class="btn btn-ghost" onclick="closeProductModal()">取消</button>
       </div>
     </div>
   </div>
@@ -1192,6 +1259,9 @@ function shakeInput(id) {
 window.addEventListener('load', () => {
   buildQr();
   startQrCountdown();
+  if (!getApiKey()) {
+    setTimeout(() => toast('💡 提示：点击右上角"⚙️ API设置"配置通义千问Key，启用真实AI功能'), 3500);
+  }
 });
 
 // ── NAV ──
@@ -1200,11 +1270,11 @@ function navTo(page, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
   if (el) el.classList.add('active');
-  // init page data on first visit
-  if (page === 'title' && !window._titleInited) { initTitlePage(); window._titleInited = true; }
+  // init page data (title and health always re-init to reflect latest data)
+  if (page === 'title') { initTitlePage(); }
   if (page === 'image' && !window._imageInited) { initImagePage(); window._imageInited = true; }
   if (page === 'keyword' && !window._kwInited) { initKwPage(); window._kwInited = true; }
-  if (page === 'health' && !window._healthInited) { initHealthPage(); window._healthInited = true; }
+  if (page === 'health') { initHealthPage(); }
 }
 function navToWithClick(page) {
   const navItems = document.querySelectorAll('.nav-item');
@@ -1262,60 +1332,207 @@ function createAbTest() {
 }
 
 // ── TITLE PAGE ──
-const products = [
-  {id:1,name:'女装夏季碎花连衣裙',len:19,issue:'含违禁词"最"',status:'违禁词',orig:'2024夏季新款最新女装碎花雪纺连衣裙显瘦气质仙女风海边度假裙子',newTitle:'2024夏季新款女装碎花雪纺连衣裙【精选】显瘦气质仙女风爆款海边度假裙子',kws:['碎花连衣裙','夏季显瘦','仙女风','雪纺','度假裙'],gmv:'¥22,440',roi:'+2.3x'},
-  {id:2,name:'男装休闲短裤五分裤',len:15,issue:'标题字数不足',status:'待优化',orig:'夏季男士休闲短裤五分裤宽松',newTitle:'2024夏季新款男士休闲短裤五分裤宽松透气运动百搭纯棉沙滩裤',kws:['男士短裤','休闲五分裤','宽松透气','纯棉','沙滩裤'],gmv:'¥8,320',roi:'+1.6x'},
-  {id:3,name:'夏季防晒冰丝薄款外套',len:12,issue:'缺少核心关键词',status:'待优化',orig:'防晒外套女夏薄款',newTitle:'2024夏季新款防晒外套女冰丝薄款透气UPF50+显瘦长袖防紫外线开衫',kws:['防晒外套','冰丝薄款','UPF50+','透气','防紫外线'],gmv:'¥15,680',roi:'+2.1x'},
-  {id:4,name:'高腰牛仔短裤女显腿长',len:22,issue:'含违禁词"最"',status:'违禁词',orig:'夏季最流行高腰牛仔短裤女显腿长显瘦热裤',newTitle:'2024夏季爆款高腰牛仔短裤女显腿长显瘦弹力修身热裤百搭时尚',kws:['高腰牛仔短裤','显腿长','显瘦','弹力修身','热裤'],gmv:'¥11,200',roi:'+1.8x'},
-  {id:5,name:'针织开衫女春秋外套',len:10,issue:'标题字数不足',status:'待优化',orig:'针织开衫外套女',newTitle:'2024春秋新款针织开衫女宽松慵懒风毛衣外套显瘦百搭休闲上衣',kws:['针织开衫','慵懒风','毛衣外套','显瘦百搭','春秋'],gmv:'¥9,870',roi:'+1.5x'},
-];
-let optimizedIds = new Set();
+// ── PRODUCT DATA (localStorage) ──
+const PRODUCTS_KEY = 'ai_products';
+const BANNED_WORDS = ['最','第一','顶级','首选','极品','最佳','最好','国家级','世界级','全球','唯一','永久','纯天然'];
+function loadProducts() {
+  try { return JSON.parse(localStorage.getItem(PRODUCTS_KEY) || '[]'); } catch { return []; }
+}
+function saveProducts(arr) {
+  localStorage.setItem(PRODUCTS_KEY, JSON.stringify(arr));
+}
+function getNextId() {
+  const ps = loadProducts();
+  return ps.length ? Math.max(...ps.map(p => p.id)) + 1 : 1;
+}
+function detectIssue(title) {
+  const found = BANNED_WORDS.filter(w => title.includes(w));
+  if (found.length) return '含违禁词"' + found[0] + '"';
+  if (title.length < 20) return '标题字数不足';
+  if (title.length > 60) return '标题字数超出';
+  return '待检测';
+}
+function detectStatus(title) {
+  const found = BANNED_WORDS.filter(w => title.includes(w));
+  return found.length ? '违禁词' : '待优化';
+}
+function addProduct(name, orig) {
+  const ps = loadProducts();
+  const issue = detectIssue(orig);
+  const status = detectStatus(orig);
+  ps.push({ id: getNextId(), name, orig, issue, status, newTitle: '', kws: [], gmv: '', roi: '' });
+  saveProducts(ps);
+}
+function updateProduct(id, changes) {
+  const ps = loadProducts();
+  const idx = ps.findIndex(p => p.id === id);
+  if (idx >= 0) { Object.assign(ps[idx], changes); saveProducts(ps); }
+}
+function deleteProduct(id) {
+  saveProducts(loadProducts().filter(p => p.id !== id));
+  optimizedIds.delete(id);
+}
+function seedDemoProducts() {
+  if (localStorage.getItem('ai_seeded')) return;
+  const demos = [
+    {name:'女装夏季碎花连衣裙',orig:'2024夏季新款最新女装碎花雪纺连衣裙显瘦气质仙女风海边度假裙子'},
+    {name:'男装休闲短裤五分裤',orig:'夏季男士休闲短裤五分裤宽松'},
+    {name:'夏季防晒冰丝薄款外套',orig:'防晒外套女夏薄款'},
+    {name:'高腰牛仔短裤女显腿长',orig:'夏季最流行高腰牛仔短裤女显腿长显瘦热裤'},
+    {name:'针织开衫女春秋外套',orig:'针织开衫外套女'},
+  ];
+  demos.forEach(d => addProduct(d.name, d.orig));
+  localStorage.setItem('ai_seeded', '1');
+}
+function updateDashboardStats() {
+  const ps = loadProducts();
+  const total = ps.length;
+  const violating = ps.filter(p => p.status === '违禁词').length;
+  const pending = ps.filter(p => p.status !== '已优化').length;
+  const badge = document.getElementById('titleBadge');
+  if (badge) { badge.textContent = pending; badge.style.display = pending > 0 ? '' : 'none'; }
+  const mc = document.getElementById('metricProductCount');
+  if (mc) mc.textContent = total;
+  const dav = document.getElementById('dashAlertViolation');
+  if (dav) dav.textContent = violating + '件商品';
+  const dap = document.getElementById('dashAlertPending');
+  if (dap) dap.textContent = pending + '件商品';
+  const tcp = document.getElementById('toolCardPending');
+  if (tcp) tcp.textContent = pending + '个待处理';
+  const hmv = document.getElementById('healthMetricViolation');
+  if (hmv) hmv.textContent = violating;
+  const hmp = document.getElementById('healthMetricPending');
+  if (hmp) hmp.textContent = pending;
+}
+let optimizedIds = new Set(loadProducts().filter(p => p.status === '已优化').map(p => p.id));
+// Modal functions
+function openProductModal() {
+  document.getElementById('prodModalName').value = '';
+  document.getElementById('prodModalOrig').value = '';
+  document.getElementById('prodModalDetect').style.display = 'none';
+  document.getElementById('productModal').classList.add('open');
+}
+function closeProductModal() { document.getElementById('productModal').classList.remove('open'); }
+function onProdOrigInput(val) {
+  const el = document.getElementById('prodModalDetect');
+  if (!val.trim()) { el.style.display = 'none'; return; }
+  const issue = detectIssue(val);
+  const status = detectStatus(val);
+  el.style.display = 'block';
+  if (status === '违禁词') {
+    el.style.background = '#fef2f2'; el.style.color = '#dc2626'; el.style.border = '1px solid #fca5a5';
+    el.textContent = '⚠️ 检测到违禁词：' + issue;
+  } else if (val.length < 20) {
+    el.style.background = '#fffbeb'; el.style.color = '#b45309'; el.style.border = '1px solid #fcd34d';
+    el.textContent = '✏️ ' + issue + '（当前' + val.length + '字，建议25-30字）';
+  } else {
+    el.style.background = '#f0fdf4'; el.style.color = '#16a34a'; el.style.border = '1px solid #86efac';
+    el.textContent = '✅ 标题字数' + val.length + '字，无违禁词';
+  }
+}
+function saveProductModal() {
+  const name = document.getElementById('prodModalName').value.trim();
+  const orig = document.getElementById('prodModalOrig').value.trim();
+  if (!name) { toast('⚠️ 请输入商品名称'); return; }
+  if (!orig) { toast('⚠️ 请输入原始标题'); return; }
+  addProduct(name, orig);
+  closeProductModal();
+  initTitlePage();
+  updateDashboardStats();
+  toast('✅ 商品已添加！');
+}
 function initTitlePage() {
+  const ps = loadProducts();
   const tbody = document.getElementById('productTbody');
-  tbody.innerHTML = products.map(p => `
+  if (ps.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#aaa">暂无商品，点击"添加商品"开始使用</td></tr>';
+    const btn = document.getElementById('batchOptBtn');
+    if (btn) btn.textContent = '⚡ 一键批量优化';
+    return;
+  }
+  tbody.innerHTML = ps.map(p => `
     <tr id="row${p.id}">
       <td><input type="checkbox" class="prod-cb" value="${p.id}"/></td>
       <td><div style="font-weight:600">${p.name}</div><div style="font-size:11px;color:#888">${p.orig.substring(0,20)}...</div></td>
-      <td><span style="font-size:16px;font-weight:700">${p.len}</span><span style="color:#888">/30字</span></td>
-      <td><span style="font-size:12px;color:${p.status==='违禁词'?'#dc2626':'#b45309'}">${p.issue}</span></td>
-      <td><span class="status-badge ${p.status==='违禁词'?'red':'orange'}" id="status${p.id}">${p.status==='违禁词'?'⚠️ '+p.status:'✏️ '+p.status}</span></td>
-      <td><button class="btn btn-primary btn-sm" onclick="openWorkspace(${p.id})">优化</button></td>
+      <td><span style="font-size:16px;font-weight:700">${p.orig.length}</span><span style="color:#888">/30字</span></td>
+      <td><span style="font-size:12px;color:${p.status==='违禁词'?'#dc2626':'#b45309'}">${p.issue||'—'}</span></td>
+      <td><span class="status-badge ${p.status==='违禁词'?'red':p.status==='已优化'?'green':'orange'}" id="status${p.id}">${p.status==='违禁词'?'⚠️ 违禁词':p.status==='已优化'?'✅ 已优化':'✏️ 待优化'}</span></td>
+      <td style="display:flex;gap:4px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="openWorkspace(${p.id})">优化</button>
+        <button class="btn btn-danger btn-sm" onclick="confirmDeleteProduct(${p.id})">删除</button>
+      </td>
     </tr>`).join('');
+  const pending = ps.filter(p => p.status !== '已优化').length;
+  const btn = document.getElementById('batchOptBtn');
+  if (btn) btn.textContent = `⚡ 一键批量优化 (${pending}件)`;
 }
 function filterProducts(v) {
+  const ps = loadProducts();
   const rows = document.querySelectorAll('#productTbody tr');
-  rows.forEach((r,i) => {
-    r.style.display = products[i].name.includes(v) ? '' : 'none';
+  rows.forEach((r, i) => {
+    if (!ps[i]) return;
+    r.style.display = ps[i].name.includes(v) ? '' : 'none';
   });
+}
+function confirmDeleteProduct(id) {
+  if (!confirm('确认删除该商品？此操作不可恢复。')) return;
+  deleteProduct(id);
+  initTitlePage();
+  updateDashboardStats();
+  toast('🗑️ 商品已删除');
 }
 function selectAll(cb) {
   document.querySelectorAll('.prod-cb').forEach(c => c.checked = cb.checked);
 }
-function batchOptimize() {
-  toast('⚡ 正在批量优化5件商品标题...');
-  setTimeout(()=>{
-    products.forEach(p=>{
-      document.getElementById('status'+p.id).className='status-badge green';
-      document.getElementById('status'+p.id).textContent='✅ 已优化';
-      optimizedIds.add(p.id);
-    });
-    document.getElementById('titleBadge').style.display='none';
-    toast('✅ 5件商品标题优化完成！');
-  },1800);
+async function batchOptimize() {
+  const apiKey = getApiKey();
+  if (!apiKey) { openSettingsModal(); return; }
+  const ps = loadProducts().filter(p => p.status !== '已优化');
+  if (ps.length === 0) { toast('✅ 所有商品已优化！'); return; }
+  toast(`⚡ 开始批量优化 ${ps.length} 件商品...`);
+  const btn = document.getElementById('batchOptBtn');
+  if (btn) btn.disabled = true;
+  for (const p of ps) {
+    const statusEl = document.getElementById('status' + p.id);
+    if (statusEl) { statusEl.className = 'status-badge blue'; statusEl.textContent = '⏳ 优化中...'; }
+    let newTitle = '';
+    await callQwenStream(
+      [{ role: 'user', content: `你是电商标题优化专家。请为以下商品生成一个高转化率的淘宝/天猫标题：\n商品名称：${p.name}\n原始标题：${p.orig}\n当前问题：${p.issue}\n\n要求：\n1. 严禁包含违禁极限词（最、第一、顶级、首选、极品等）\n2. 字数控制在25-30字\n3. 包含高搜索量核心关键词，语言流畅\n4. 突出商品核心卖点\n\n只输出标题本身，不含任何解释或前缀。` }],
+      (token) => { newTitle += token; },
+      () => {
+        newTitle = newTitle.trim();
+        updateProduct(p.id, { newTitle, status: '已优化' });
+        optimizedIds.add(p.id);
+        if (statusEl) { statusEl.className = 'status-badge green'; statusEl.textContent = '✅ 已优化'; }
+      },
+      (e) => {
+        if (statusEl) { statusEl.className = 'status-badge orange'; statusEl.textContent = '✏️ 待优化'; }
+        toast('❌ ' + p.name + ' 优化失败');
+      }
+    );
+  }
+  updateDashboardStats();
+  if (btn) {
+    btn.disabled = false;
+    const rem = loadProducts().filter(p => p.status !== '已优化').length;
+    btn.textContent = rem > 0 ? `⚡ 一键批量优化 (${rem}件)` : '⚡ 一键批量优化';
+  }
+  toast('✅ 批量优化完成！');
 }
 function openWorkspace(id) {
-  const p = products.find(x=>x.id===id);
+  const p = loadProducts().find(x=>x.id===id);
   document.getElementById('optWorkspace').style.display='block';
   document.getElementById('wsProdName').textContent = p.name;
   document.getElementById('wsIssue').textContent = '⚠️ '+p.issue;
   document.getElementById('wsOrig').textContent = p.orig;
-  document.getElementById('wsOrigLen').textContent = p.len+'/30字';
+  document.getElementById('wsOrigLen').textContent = p.orig.length+'/30字';
   const newEl = document.getElementById('wsNew');
-  newEl.innerHTML = p.newTitle.replace('【精选】','<span class="highlight">【精选】</span>').replace('爆款','<span class="highlight">爆款</span>');
-  document.getElementById('wsNewLen').textContent = p.newTitle.length+'/30字';
-  document.getElementById('wsKwTags').innerHTML = p.kws.map(k=>`<span class="kw-tag" onclick="addKw(this,'${k}')">${k}</span>`).join('');
-  document.getElementById('wsGmv').textContent = p.gmv;
-  document.getElementById('wsRoi').textContent = p.roi;
+  const displayTitle = p.newTitle || '（点击"重新生成"让AI优化此标题）';
+  newEl.textContent = displayTitle;
+  document.getElementById('wsNewLen').textContent = (p.newTitle||'').length+'/30字';
+  document.getElementById('wsKwTags').innerHTML = (p.kws||[]).map(k=>`<span class="kw-tag" onclick="addKw(this,'${k}')">${k}</span>`).join('');
+  document.getElementById('wsGmv').textContent = p.gmv || '—';
+  document.getElementById('wsRoi').textContent = p.roi || '—';
   const preds = [{l:'曝光量',v:'+40%',w:40,c:'78%'},{l:'点击率(CTR)',v:'+34.8%',w:35,c:'72%'},{l:'转化率',v:'+15.5%',w:15,c:'58%'},{l:'收藏加购',v:'+22.3%',w:22,c:'65%'}];
   document.getElementById('wsPredList').innerHTML = preds.map(pd=>`
     <div class="pred-item">
@@ -1330,26 +1547,35 @@ function openWorkspace(id) {
 function applyTitle() {
   const p = window._currentProd;
   if(!p) return;
-  document.getElementById('status'+p.id).className='status-badge green';
-  document.getElementById('status'+p.id).textContent='✅ 已优化';
+  const newTitle = document.getElementById('wsNew').textContent.trim();
+  updateProduct(p.id, { newTitle, status: '已优化' });
   optimizedIds.add(p.id);
-  const remaining = products.length - optimizedIds.size;
-  if(remaining===0) document.getElementById('titleBadge').style.display='none';
-  else document.getElementById('titleBadge').textContent=remaining;
+  const statusEl = document.getElementById('status'+p.id);
+  if(statusEl){ statusEl.className='status-badge green'; statusEl.textContent='✅ 已优化'; }
+  updateDashboardStats();
   toast('✅ 标题已应用到商品，预计明日生效');
 }
-function regenTitle() {
+async function regenTitle() {
+  const p = window._currentProd;
+  if (!p) return;
   const el = document.getElementById('wsNew');
-  el.textContent = '正在重新生成...';
-  setTimeout(()=>{
-    const p = window._currentProd;
-    const alternatives = [
-      '2024夏季爆款女装雪纺碎花连衣裙显瘦气质仙女海边度假裙子新款',
-      '女装夏季新款碎花雪纺连衣裙2024仙女风显瘦气质海边度假长裙爆款'
-    ];
-    el.textContent = alternatives[Math.floor(Math.random()*alternatives.length)];
-    toast('🔄 已生成新版标题');
-  },900);
+  el.textContent = '⏳ AI正在优化标题...';
+  let result = '';
+  await callQwenStream(
+    [{ role: 'user', content: `你是电商标题优化专家。请为以下商品重新生成一个高转化率的淘宝/天猫标题：\n商品：${p.name}\n原标题：${p.orig}\n问题：${p.issue}\n\n要求：\n1. 严禁包含违禁极限词（最、第一、顶级、首选、极品等）\n2. 字数控制在25-30字\n3. 包含高搜索量核心关键词，语言流畅\n4. 突出商品核心卖点\n\n只输出标题本身，不含任何解释或前缀。` }],
+    (token) => { result += token; el.textContent = result; },
+    () => {
+      const trimmed = result.trim();
+      updateProduct(p.id, { newTitle: trimmed, status: '已优化' });
+      optimizedIds.add(p.id);
+      const statusEl = document.getElementById('status' + p.id);
+      if (statusEl) { statusEl.className = 'status-badge green'; statusEl.textContent = '✅ 已优化'; }
+      document.getElementById('wsNewLen').textContent = trimmed.length + '/30字';
+      updateDashboardStats();
+      toast('🔄 AI已生成新版标题');
+    },
+    (e) => { el.textContent = p.newTitle || p.orig; toast('❌ 生成失败：' + e.message); }
+  );
 }
 function addKw(el,kw) {
   el.classList.toggle('selected');
@@ -1480,22 +1706,35 @@ BGM推荐：轻快夏日钢琴曲`,
 let currentCopyVer = 0;
 let generatedCopies = [];
 function toggleSellPoint(el) { el.classList.toggle('selected'); }
-function generateCopy() {
+async function generateCopy() {
   const platform = document.getElementById('copyPlatform').value;
+  const product = document.getElementById('copyProduct').value.trim() || '商品';
+  const pts = [...document.querySelectorAll('#sellPointTags .kw-tag.selected')].map(e => e.textContent);
   const btn = event.target;
-  btn.innerHTML = '<span class="spinner"></span> 生成中...';
+  btn.innerHTML = '<span class="spinner"></span> AI生成中...';
   btn.disabled = true;
-  setTimeout(() => {
-    btn.innerHTML = '🤖 AI生成文案';
-    btn.disabled = false;
-    generatedCopies = copyTexts[platform] || copyTexts['淘宝/天猫详情页'];
-    currentCopyVer = 0;
-    document.getElementById('copyResult').style.display = 'block';
-    document.getElementById('copyContent').textContent = generatedCopies[0];
-    document.querySelectorAll('#copyTabs .tab-item').forEach((t,i) => t.classList.toggle('active', i===0));
-    document.getElementById('copyResult').scrollIntoView({behavior:'smooth'});
-    toast('✅ 3版文案已生成');
-  }, 1200);
+  document.getElementById('copyResult').style.display = 'block';
+  const contentEl = document.getElementById('copyContent');
+  contentEl.textContent = '✨ AI正在创作中，请稍候...';
+  document.getElementById('copyResult').scrollIntoView({ behavior: 'smooth' });
+  let full = '';
+  await callQwenStream(
+    [
+      { role: 'system', content: '你是一位专业的电商文案写手，擅长为不同平台创作高转化率的商品文案。' },
+      { role: 'user', content: `请为以下商品生成${platform}文案：\n商品名称：${product}\n主要卖点：${pts.length ? pts.join('、') : '根据商品名称自由发挥'}\n\n请生成3个不同风格的版本，严格按照以下格式输出：\n===版本1===\n（内容）\n===版本2===\n（内容）\n===版本3===\n（内容）\n\n每个版本符合${platform}的平台调性和用户习惯，内容有吸引力。` }
+    ],
+    (token) => { full += token; contentEl.textContent = full; },
+    () => {
+      const parts = full.split(/===版本\d+===/).map(s => s.trim()).filter(Boolean);
+      generatedCopies = parts.length >= 2 ? parts : [full];
+      currentCopyVer = 0;
+      contentEl.textContent = generatedCopies[0];
+      document.querySelectorAll('#copyTabs .tab-item').forEach((t, i) => t.classList.toggle('active', i === 0));
+      btn.innerHTML = '🤖 AI生成文案'; btn.disabled = false;
+      toast('✅ AI文案已生成！');
+    },
+    (e) => { btn.innerHTML = '🤖 AI生成文案'; btn.disabled = false; contentEl.textContent = ''; toast('❌ 生成失败：' + e.message); }
+  );
 }
 function switchCopyTab(idx, el) {
   currentCopyVer = idx;
@@ -1512,35 +1751,66 @@ function copyCopyText() {
 }
 
 // ── IMAGE PAGE ──
-const imageData = [
-  {name:'女装碎花连衣裙',emoji:'👗',score:89,scoreColor:'#22c55e',issues:['主图清晰度高','构图合理'],suggest:'可适当增加场景感'},
-  {name:'男装休闲短裤',emoji:'👖',score:72,scoreColor:'#f59e0b',issues:['背景不够简洁','文字过多'],suggest:'建议更换纯色背景，减少文字'},
-  {name:'防晒冰丝外套',emoji:'🧥',score:65,scoreColor:'#f59e0b',issues:['商品占比偏小','角度单一'],suggest:'增大商品在画面中的占比至70%以上'},
-  {name:'高腰牛仔短裤',emoji:'👕',score:48,scoreColor:'#ef4444',issues:['曝光不足','色彩暗淡'],suggest:'重拍：增强打光，使用浅色背景'},
-  {name:'针织开衫',emoji:'🧶',score:81,scoreColor:'#22c55e',issues:['整体不错'],suggest:'可增加多角度展示图'},
-  {name:'夏季凉鞋',emoji:'👡',score:55,scoreColor:'#ef4444',issues:['水印遮挡商品','分辨率低'],suggest:'去除水印，上传≥800x800px高清图'},
-];
 function initImagePage() {
+  const ps = loadProducts();
   const tbody = document.getElementById('imageTbody');
-  tbody.innerHTML = imageData.map(item => `
+  if (ps.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#aaa">请先在"标题优化"页面添加商品，再进行主图诊断</td></tr>';
+    return;
+  }
+  tbody.innerHTML = ps.map(p => `
     <tr>
-      <td><div style="font-weight:600">${item.name}</div></td>
-      <td><div style="font-size:32px;text-align:center">${item.emoji}</div></td>
+      <td><div style="font-weight:600">${p.name}</div></td>
+      <td><div style="font-size:32px;text-align:center">🖼️</div></td>
+      <td><div style="font-size:13px;color:#aaa">未诊断</div></td>
+      <td><div style="font-size:12px;color:#aaa">点击"全店扫描"进行AI诊断</div></td>
+      <td><div style="font-size:12px;color:#aaa">—</div></td>
       <td>
-        <div style="font-size:20px;font-weight:700;color:${item.scoreColor}">${item.score}</div>
-        <div style="font-size:11px;color:#888">/ 100分</div>
-      </td>
-      <td><div style="font-size:12px;color:#555">${item.issues.join('，')}</div></td>
-      <td><div style="font-size:12px;color:#888">${item.suggest}</div></td>
-      <td>
-        <button class="btn btn-sm btn-primary" onclick="optimizeImage('${item.name}')">优化建议</button>
+        <button class="btn btn-sm btn-primary" onclick="optimizeImage('${p.name}')">优化建议</button>
         <button class="btn btn-sm btn-ghost" style="margin-top:4px" onclick="toast('请重新上传商品图片')">重新上传</button>
       </td>
     </tr>`).join('');
 }
-function runDiagnosis() {
-  toast('🔍 正在扫描全店商品主图...');
-  setTimeout(()=>toast('✅ 扫描完成，6件商品已诊断'), 2000);
+async function runDiagnosis() {
+  const apiKey = getApiKey();
+  if (!apiKey) { openSettingsModal(); return; }
+  const ps = loadProducts();
+  if (ps.length === 0) { toast('⚠️ 请先添加商品'); return; }
+  toast('🔍 正在AI诊断商品主图...');
+  const tbody = document.getElementById('imageTbody');
+  tbody.innerHTML = ps.map(p => `
+    <tr id="imgrow${p.id}">
+      <td><div style="font-weight:600">${p.name}</div></td>
+      <td><div style="font-size:32px;text-align:center">🖼️</div></td>
+      <td><span class="spinner"></span></td>
+      <td colspan="2"><span style="color:#aaa;font-size:12px">AI诊断中...</span></td>
+      <td></td>
+    </tr>`).join('');
+  for (const p of ps) {
+    let raw = '';
+    await callQwenStream(
+      [{ role: 'user', content: `你是电商主图诊断专家。请对以下商品进行主图诊断：\n商品名称：${p.name}\n商品标题：${p.orig}\n\n请返回纯JSON格式（不含markdown代码块），格式：\n{"score":75,"issues":["问题1","问题2"],"suggest":"优化建议"}\n\nscore为0-100分，issues为问题数组（最多3条），suggest为一句话优化建议。` }],
+      (token) => { raw += token; },
+      () => {
+        let result = { score: 70, issues: ['需上传实际图片进行诊断'], suggest: '请上传商品主图以获取精准建议' };
+        try { result = JSON.parse(raw.replace(/```json|```/g, '').trim()); } catch {}
+        const color = result.score >= 80 ? '#22c55e' : result.score >= 60 ? '#f59e0b' : '#ef4444';
+        const row = document.getElementById('imgrow' + p.id);
+        if (row) row.outerHTML = `<tr>
+          <td><div style="font-weight:600">${p.name}</div></td>
+          <td><div style="font-size:32px;text-align:center">🖼️</div></td>
+          <td><div style="font-size:20px;font-weight:700;color:${color}">${result.score}</div><div style="font-size:11px;color:#888">/ 100分</div></td>
+          <td><div style="font-size:12px;color:#555">${(result.issues||[]).join('，')||'✅ 无明显问题'}</div></td>
+          <td><div style="font-size:12px;color:#888">${result.suggest||''}</div></td>
+          <td>
+            <button class="btn btn-sm btn-primary" onclick="optimizeImage('${p.name}')">优化建议</button>
+            <button class="btn btn-sm btn-ghost" style="margin-top:4px" onclick="toast('请重新上传商品图片')">重新上传</button>
+          </td></tr>`;
+      },
+      (e) => { const row = document.getElementById('imgrow' + p.id); if (row) row.cells[2].innerHTML = '<span style="color:#ef4444;font-size:12px">诊断失败</span>'; }
+    );
+  }
+  toast('✅ 主图诊断完成！');
 }
 function optimizeImage(name) { toast('📊 "'+name+'"的详细优化报告已生成，请查收'); }
 
@@ -1584,21 +1854,36 @@ function runPrediction() {
 }
 
 // ── KEYWORD PAGE ──
-const keywords = [
-  {kw:'碎花连衣裙',heat:98,comp:'高',conv:'3.2%',score:92,type:'hot'},
-  {kw:'2024夏季连衣裙',heat:87,comp:'中',conv:'2.8%',score:88,type:'hot'},
-  {kw:'显瘦仙女裙',heat:76,comp:'中',conv:'4.1%',score:91,type:'convert'},
-  {kw:'雪纺连衣裙碎花',heat:65,comp:'低',conv:'3.6%',score:85,type:'long'},
-  {kw:'海边度假连衣裙',heat:58,comp:'低',conv:'5.2%',score:89,type:'convert'},
-  {kw:'气质碎花长裙',heat:44,comp:'低',conv:'4.8%',score:83,type:'long'},
-  {kw:'仙女风雪纺裙',heat:52,comp:'中',conv:'3.9%',score:80,type:'long'},
-  {kw:'夏季显瘦长裙',heat:71,comp:'中',conv:'2.4%',score:75,type:'hot'},
-];
+let keywords = [];
 let kwFilter='all';
-function initKwPage() { renderKw(); }
-function searchKeywords() {
-  toast('🔍 正在分析关键词数据...');
-  setTimeout(()=>{ renderKw(); toast('✅ 关键词分析完成'); }, 1000);
+function initKwPage() {
+  if (keywords.length > 0) renderKw();
+  else document.getElementById('kwTbody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#aaa">请输入商品类目并点击"分析关键词"</td></tr>';
+}
+async function searchKeywords() {
+  const apiKey = getApiKey();
+  if (!apiKey) { openSettingsModal(); return; }
+  const input = document.getElementById('kwInput');
+  const category = input ? input.value.trim() : '';
+  if (!category) { toast('⚠️ 请输入商品类目或名称'); return; }
+  toast('🔍 AI正在分析关键词数据...');
+  document.getElementById('kwTbody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px"><span class="spinner"></span> 分析中...</td></tr>';
+  let raw = '';
+  await callQwenStream(
+    [{ role: 'user', content: `你是电商关键词分析专家。请为"${category}"生成8个适合淘宝/天猫搜索的关键词数据。\n\n请返回纯JSON数组（不含markdown代码块），格式：\n[{"kw":"关键词","heat":85,"comp":"高","conv":"3.2%","score":88,"type":"hot"}]\n\nheat为搜索热度0-100，comp为竞争度（高/中/低），conv为转化率如"3.2%"，score为综合评分0-100，type为hot（热门）/long（长尾）/convert（高转化）之一。必须返回恰好8个。` }],
+    (token) => { raw += token; },
+    () => {
+      try {
+        keywords = JSON.parse(raw.replace(/```json|```/g, '').trim());
+        renderKw();
+        toast('✅ 关键词分析完成！');
+      } catch (e) {
+        document.getElementById('kwTbody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#ef4444">解析失败，请重试</td></tr>';
+        toast('❌ 解析失败：' + e.message);
+      }
+    },
+    (e) => { toast('❌ 关键词分析失败：' + e.message); }
+  );
 }
 function filterKw(type, el) {
   kwFilter=type;
@@ -1667,25 +1952,48 @@ const platContent = {
 价格也很良心，不到正价品牌一半的价格！
 有需要的留言我，发你链接👇`}
 };
-function adaptPlatforms() {
-  if(selectedPlatforms.size===0){toast('⚠️ 请至少选择一个目标平台');return;}
-  toast('⚡ 正在适配'+selectedPlatforms.size+'个平台...');
-  setTimeout(()=>{
-    const container = document.getElementById('platResultCards');
-    const results = [...selectedPlatforms];
-    container.innerHTML = results.map(p=>`
+async function adaptPlatforms() {
+  if (selectedPlatforms.size === 0) { toast('⚠️ 请至少选择一个目标平台'); return; }
+  const original = document.getElementById('platInput').value.trim();
+  if (!original) { toast('⚠️ 请输入原始内容'); return; }
+  const platMeta = {
+    douyin:       { icon: '🎵', name: '抖音',     hint: '短视频/直播风格，口语化活泼，句子短，多用感叹号，结尾加相关话题标签#xxx' },
+    xiaohongshu:  { icon: '📕', name: '小红书',   hint: '种草笔记风格，有温度真实感，用emoji点缀，分点介绍卖点，结尾加#话题标签' },
+    wechat:       { icon: '💬', name: '微信朋友圈', hint: '生活化语言，像朋友自然推荐，不要广告感，轻松随意' }
+  };
+  const platforms = [...selectedPlatforms];
+  const container = document.getElementById('platResultCards');
+  container.innerHTML = platforms.map(platKey => {
+    const meta = platMeta[platKey];
+    return `
       <div class="card" style="margin-bottom:0">
-        <div class="card-title">${platContent[p].icon} ${platContent[p].name}版本</div>
-        <div style="background:#f9fafb;border-radius:8px;padding:14px;font-size:13px;line-height:1.8;white-space:pre-wrap;min-height:160px">${platContent[p].text}</div>
+        <div class="card-title">${meta.icon} ${meta.name}版本</div>
+        <div style="background:#f9fafb;border-radius:8px;padding:14px;font-size:13px;line-height:1.8;white-space:pre-wrap;min-height:120px" id="pcontent_${platKey}">⏳ AI生成中...</div>
         <div style="display:flex;gap:8px;margin-top:12px">
-          <button class="btn btn-sm btn-primary" onclick="toast('✅ 已复制${platContent[p].name}版本内容')">📋 复制</button>
+          <button class="btn btn-sm btn-primary" onclick="copyPlatContent('pcontent_${platKey}','${meta.name}')">📋 复制</button>
           <button class="btn btn-sm btn-ghost" onclick="toast('✅ 已保存草稿')">保存草稿</button>
         </div>
-      </div>`).join('');
-    document.getElementById('platResults').style.display='block';
-    document.getElementById('platResults').scrollIntoView({behavior:'smooth'});
-    toast('✅ 适配完成！');
-  }, 1200);
+      </div>`;
+  }).join('');
+  document.getElementById('platResults').style.display = 'block';
+  document.getElementById('platResults').scrollIntoView({ behavior: 'smooth' });
+  toast('⚡ AI正在适配 ' + platforms.length + ' 个平台...');
+  await Promise.all(platforms.map(async (platKey) => {
+    const meta = platMeta[platKey];
+    const cid = 'pcontent_' + platKey;
+    let result = '';
+    await callQwenStream(
+      [{ role: 'user', content: `将下面的淘宝商品文案改写为适合${meta.name}的风格（${meta.hint}）。\n\n原文案：\n${original}\n\n只输出改写后的内容，不含任何说明或前缀。` }],
+      (token) => { result += token; const el = document.getElementById(cid); if (el) el.textContent = result; },
+      null,
+      () => { const el = document.getElementById(cid); if (el) el.textContent = '❌ 生成失败，请重试'; }
+    );
+  }));
+  toast('✅ 所有平台内容适配完成！');
+}
+function copyPlatContent(id, name) {
+  const t = document.getElementById(id)?.textContent;
+  if (t) navigator.clipboard?.writeText(t).then(() => toast('✅ 已复制' + name + '版本内容'));
 }
 
 // ── AB TEST PAGE ──
@@ -1703,40 +2011,92 @@ function stopAbTest() {
 }
 
 // ── HEALTH PAGE ──
-const healthItems = [
-  {name:'女装碎花连衣裙',score:91,color:'#22c55e',issues:[]},
-  {name:'高腰牛仔短裤',score:43,color:'#ef4444',issues:['标题含违禁词"最"','主图清晰度不足60分']},
-  {name:'男装休闲短裤',score:68,color:'#f59e0b',issues:['标题字数不足（15字）','缺少核心关键词']},
-  {name:'防晒冰丝外套',score:74,color:'#f59e0b',issues:['主图角度单一','详情页缺少尺码对照表']},
-  {name:'针织开衫',score:82,color:'#22c55e',issues:[]},
-  {name:'夏季凉鞋',score:38,color:'#ef4444',issues:['标题含违禁词"最"','主图有水印','30天零销量']},
-];
-function initHealthPage() {
-  document.getElementById('healthList').innerHTML = healthItems.map(item=>`
-    <div class="health-item">
-      <div class="health-score-ring">
-        <svg width="48" height="48" style="transform:rotate(-90deg)">
-          <circle cx="24" cy="24" r="18" fill="none" stroke="#e8ecf0" stroke-width="4"/>
-          <circle cx="24" cy="24" r="18" fill="none" stroke="${item.color}" stroke-width="4"
-            stroke-dasharray="113.1" stroke-dashoffset="${113.1*(1-item.score/100)}" stroke-linecap="round"/>
-        </svg>
-        <div class="score-num" style="color:${item.color}">${item.score}</div>
-      </div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:700">${item.name}</div>
-        <div style="font-size:12px;color:#888;margin-top:3px">
-          ${item.issues.length===0?'<span style="color:#16a34a">✅ 无异常</span>':item.issues.map(i=>`<span style="color:#ef4444">⚠️ ${i}</span>`).join('  ')}
-        </div>
-      </div>
-      <div style="display:flex;gap:8px">
-        ${item.score<80?`<button class="btn btn-sm btn-primary" onclick="toast('正在优化${item.name}...')">一键修复</button>`:''}
-        <button class="btn btn-sm btn-ghost" onclick="toast('${item.name}详情报告已生成')">详情</button>
-      </div>
-    </div>`).join('');
+const HEALTH_KEY = 'ai_health_results';
+function loadHealthResults() {
+  try { return JSON.parse(localStorage.getItem(HEALTH_KEY) || '{}'); } catch { return {}; }
 }
-function runHealthScan() {
-  toast('🔍 正在扫描全店商品...');
-  setTimeout(()=>toast('✅ 扫描完成，6件商品已更新'), 2000);
+function saveHealthResults(obj) { localStorage.setItem(HEALTH_KEY, JSON.stringify(obj)); }
+function renderHealthItem(p, result) {
+  const score = result ? result.score : null;
+  const issues = result ? (result.issues || []) : null;
+  const color = score === null ? '#aaa' : score >= 80 ? '#22c55e' : score >= 60 ? '#f59e0b' : '#ef4444';
+  const dashOffset = score !== null ? 113.1 * (1 - score / 100) : 113.1;
+  return `<div class="health-item" id="healthrow${p.id}">
+    <div class="health-score-ring">
+      <svg width="48" height="48" style="transform:rotate(-90deg)">
+        <circle cx="24" cy="24" r="18" fill="none" stroke="#e8ecf0" stroke-width="4"/>
+        <circle cx="24" cy="24" r="18" fill="none" stroke="${color}" stroke-width="4"
+          stroke-dasharray="113.1" stroke-dashoffset="${dashOffset}" stroke-linecap="round"/>
+      </svg>
+      <div class="score-num" style="color:${color}">${score !== null ? score : '?'}</div>
+    </div>
+    <div style="flex:1">
+      <div style="font-size:14px;font-weight:700">${p.name}</div>
+      <div style="font-size:12px;color:#888;margin-top:3px">
+        ${issues === null ? '<span style="color:#aaa">未扫描，点击"重新扫描"</span>'
+          : issues.length === 0 ? '<span style="color:#16a34a">✅ 无异常</span>'
+          : issues.map(i => `<span style="color:#ef4444">⚠️ ${i}</span>`).join('  ')}
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      ${score !== null && score < 80 ? `<button class="btn btn-sm btn-primary" onclick="toast('正在优化${p.name}...')">一键修复</button>` : ''}
+      <button class="btn btn-sm btn-ghost" onclick="toast('${p.name}详情报告已生成')">详情</button>
+    </div>
+  </div>`;
+}
+function initHealthPage() {
+  const ps = loadProducts();
+  const results = loadHealthResults();
+  const list = document.getElementById('healthList');
+  if (ps.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:30px;color:#aaa">请先在"标题优化"页面添加商品</div>';
+    return;
+  }
+  list.innerHTML = ps.map(p => renderHealthItem(p, results[p.id] || null)).join('');
+}
+async function runHealthScan() {
+  const apiKey = getApiKey();
+  if (!apiKey) { openSettingsModal(); return; }
+  const ps = loadProducts();
+  if (ps.length === 0) { toast('⚠️ 请先添加商品'); return; }
+  toast('🔍 开始AI健康扫描...');
+  const results = loadHealthResults();
+  const list = document.getElementById('healthList');
+  list.innerHTML = ps.map(p => `<div class="health-item" id="healthrow${p.id}">
+    <div class="health-score-ring"><span class="spinner"></span></div>
+    <div style="flex:1"><div style="font-weight:700">${p.name}</div><div style="font-size:12px;color:#aaa">AI诊断中...</div></div>
+  </div>`).join('');
+  for (const p of ps) {
+    let raw = '';
+    await callQwenStream(
+      [{ role: 'user', content: `你是电商店铺健康诊断专家。请对以下商品进行健康评分：\n商品名称：${p.name}\n原始标题：${p.orig}\n\n请返回纯JSON格式（不含markdown代码块）：\n{"score":75,"issues":["问题1","问题2"]}\n\nscore为综合健康分0-100，issues为发现的问题数组（最多3条，无问题则返回空数组[]）。` }],
+      (token) => { raw += token; },
+      () => {
+        let result = { score: 70, issues: [] };
+        try { result = JSON.parse(raw.replace(/```json|```/g, '').trim()); } catch {
+          // fallback: use local detection
+          const localIssues = [];
+          if (p.status === '违禁词') localIssues.push('标题含违禁词');
+          if (p.orig.length < 20) localIssues.push('标题字数不足');
+          result = { score: localIssues.length === 0 ? 80 : 50, issues: localIssues };
+        }
+        results[p.id] = result;
+        saveHealthResults(results);
+        const row = document.getElementById('healthrow' + p.id);
+        if (row) row.outerHTML = renderHealthItem(p, result);
+      },
+      (e) => {
+        const localIssues = p.status === '违禁词' ? ['标题含违禁词'] : p.orig.length < 20 ? ['标题字数不足'] : [];
+        const result = { score: localIssues.length === 0 ? 80 : 50, issues: localIssues };
+        results[p.id] = result;
+        saveHealthResults(results);
+        const row = document.getElementById('healthrow' + p.id);
+        if (row) row.outerHTML = renderHealthItem(p, result);
+      }
+    );
+  }
+  updateDashboardStats();
+  toast('✅ 店铺健康扫描完成！');
 }
 
 // ── KNOWLEDGE BASE ──
@@ -1752,25 +2112,134 @@ function kbAsk(q) {
   document.getElementById('kbPageInput').value = q;
   kbSend();
 }
-function kbSend() {
+async function kbSend() {
   const input = document.getElementById('kbPageInput');
   const q = input.value.trim();
-  if(!q) return;
+  if (!q) return;
   const history = document.getElementById('kbHistory');
-  history.innerHTML += `<div class="chat-row user"><div class="chat-bubble user">${q}</div></div>`;
-  history.innerHTML += `<div class="chat-row" id="typingRow"><div class="chat-avatar">🤖</div><div class="chat-bubble ai"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>`;
-  input.value='';
+  const safeQ = q.replace(/</g, '&lt;');
+  history.innerHTML += `<div class="chat-row user"><div class="chat-bubble user">${safeQ}</div></div>`;
+  const rowId = 'airow_' + Date.now();
+  history.innerHTML += `<div class="chat-row" id="${rowId}"><div class="chat-avatar">🤖</div><div class="chat-bubble ai"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>`;
+  input.value = '';
   history.scrollTop = history.scrollHeight;
-  const answer = kbAnswers[q] || '这是个很好的问题！根据我的知识库，建议您从以下角度思考：\n\n1. 分析当前数据，找到核心问题\n2. 参考同类目TOP商家的做法\n3. 小范围测试，数据验证后再推广\n\n如果您需要更具体的建议，可以告诉我您的商品类目和当前遇到的具体问题，我来为您提供针对性方案！';
-  setTimeout(()=>{
-    const typingRow = document.getElementById('typingRow');
-    if(typingRow) typingRow.outerHTML=`<div class="chat-row"><div class="chat-avatar">🤖</div><div class="chat-bubble ai">${answer.replace(/\n/g,'<br>')}</div></div>`;
-    history.scrollTop = history.scrollHeight;
-  }, 1200);
+  let full = '';
+  let bubbleEl = null;
+  await callQwenStream(
+    [
+      { role: 'system', content: '你是一位专业的电商运营顾问，拥有丰富的淘宝/天猫/电商平台运营经验。请用专业、实用、有条理的方式回答用户的电商运营问题，适当使用emoji增加可读性，回答简洁实用、直击要点。' },
+      { role: 'user', content: q }
+    ],
+    (token) => {
+      full += token;
+      if (!bubbleEl) {
+        const row = document.getElementById(rowId);
+        if (row) { row.querySelector('.chat-bubble').innerHTML = ''; bubbleEl = row.querySelector('.chat-bubble'); }
+      }
+      if (bubbleEl) { bubbleEl.innerHTML = full.replace(/</g, '&lt;').replace(/\n/g, '<br>'); history.scrollTop = history.scrollHeight; }
+    },
+    null,
+    (e) => { const r = document.getElementById(rowId); if (r) r.remove(); toast('❌ AI回复失败：' + e.message); }
+  );
+}
+
+// ════════════════════════════════════════
+// ── 通义千问 API SERVICE ──
+// ════════════════════════════════════════
+const QWEN_API_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+function getApiKey() { return localStorage.getItem('qwen_api_key') || ''; }
+function setApiKey(k) { localStorage.setItem('qwen_api_key', k.trim()); }
+function getModel() { return localStorage.getItem('qwen_model') || 'qwen-plus'; }
+
+// 流式调用：每收到一段文字就触发 onToken(str)，完成后触发 onDone()
+async function callQwenStream(messages, onToken, onDone, onError) {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    openSettingsModal();
+    toast('⚠️ 请先配置通义千问 API Key');
+    if (onError) onError(new Error('未配置API Key'));
+    return;
+  }
+  try {
+    const resp = await fetch(QWEN_API_URL, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: getModel(), messages, stream: true })
+    });
+    if (!resp.ok) {
+      const txt = await resp.text();
+      throw new Error('HTTP ' + resp.status + ': ' + txt.slice(0, 200));
+    }
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for (const line of lines) {
+        const t = line.trim();
+        if (!t || t === 'data: [DONE]') continue;
+        if (!t.startsWith('data: ')) continue;
+        try {
+          const delta = JSON.parse(t.slice(6)).choices?.[0]?.delta?.content;
+          if (delta) onToken(delta);
+        } catch {}
+      }
+    }
+    if (onDone) onDone();
+  } catch (e) {
+    if (onError) onError(e);
+    else toast('❌ AI调用失败：' + e.message);
+  }
+}
+
+// ── SETTINGS MODAL ──
+function openSettingsModal() {
+  document.getElementById('apiKeyInput').value = getApiKey();
+  document.getElementById('modelSelect').value = getModel();
+  document.getElementById('settingsModal').classList.add('open');
+}
+function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('open'); }
+function toggleApiKeyVis() {
+  const i = document.getElementById('apiKeyInput');
+  i.type = i.type === 'password' ? 'text' : 'password';
+}
+function saveSettings() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) { toast('⚠️ 请输入 API Key'); return; }
+  setApiKey(key);
+  localStorage.setItem('qwen_model', document.getElementById('modelSelect').value);
+  closeSettingsModal();
+  toast('✅ 设置已保存！AI功能已就绪');
+}
+async function testApiConnection() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) { toast('⚠️ 请先输入 API Key'); return; }
+  const btn = event.target;
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner"></span> 测试中...';
+  btn.disabled = true;
+  try {
+    const resp = await fetch(QWEN_API_URL, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: document.getElementById('modelSelect').value, messages: [{ role: 'user', content: '回复OK' }], max_tokens: 5 })
+    });
+    const data = await resp.json();
+    if (data.choices?.[0]?.message?.content) toast('✅ 连接成功！API Key 有效');
+    else toast('❌ 连接失败：' + JSON.stringify(data.error || data).slice(0, 80));
+  } catch (e) { toast('❌ 连接失败：' + e.message); }
+  btn.innerHTML = orig;
+  btn.disabled = false;
 }
 
 // init title page on load since it's a common entry
+seedDemoProducts();
 initTitlePage();
+updateDashboardStats();
 </script>
 </body>
 </html>
